@@ -39,7 +39,3 @@ A comprehensive data pipeline and analytics application for Big 5 European socce
 - **League Table Tab**: Season standings sorted by points with possession percentage and xGD analysis
 - **Form Table Tab**: Last 8 games performance with current season records
 - **Smart Tooltips**: Context-aware help text explaining statistical metrics
-
----
-
-Feel free to customize this further based on your specific goals or any additional features you plan to add!
