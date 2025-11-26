@@ -1,0 +1,22 @@
+# This is a Databricks asset bundle definition for soccer-data-store.
+# The Databricks extension requires databricks.yml configuration file.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+
+bundle:
+  name: soccer-data-store
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-3647422366695414.14.azuredatabricks.net
+
+  ## Optionally, there could be 'staging' or 'prod' targets here.
+  #
+  # prod:
+  #   workspace:
+  #     host: https://adb-3647422366695414.14.azuredatabricks.net
