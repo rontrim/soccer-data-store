@@ -1,9 +1,3 @@
-# soccer-data-store
-
-Let me look at the main Python file and requirements to understand what this project does:Based on the files in your repository, here's a polished README description for your soccer-data-store project:
-
----
-
 ## ⚽ Soccer Data Store
 
 A comprehensive data pipeline and analytics application for Big 5 European soccer leagues (Premier League, La Liga, Serie A, Bundesliga, Ligue 1). This project combines data engineering best practices with interactive visualization to provide deep insights into club performance metrics.
