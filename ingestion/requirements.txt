@@ -1,0 +1,6 @@
+pandas
+soccerdata
+python-dotenv
+azure-identity
+adlfs
+fsspec
