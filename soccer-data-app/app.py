@@ -168,7 +168,7 @@ with tab1:
         st.subheader("League Performance Analysis")
         
         # Columns available for plotting (exclude non-numeric/ID columns)
-        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation", "Season", "League"]
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team Abbreviation", "Season", "League"]
         plot_cols = [c for c in df_headline_filtered.columns if c not in exclude_cols]
         
         # Columns that should be reversed (Lower is Better)
