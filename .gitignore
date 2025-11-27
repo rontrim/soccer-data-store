@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .databricks
 # Streamlit secrets
-.streamlit/secrets.toml
+**/secrets.toml
