@@ -8,10 +8,10 @@ resources:
       target: "soccer_data_bronze"
       libraries:
         # Add as many scripts as you need here using a hyphen (-)
-        - notebook:
-            path: club-soccer-data/bronze-layer/player_match_bronze.sql
-        - notebook:
-            path: club-soccer-data/bronze-layer/team_match_level.sql
+        - file:
+            path: ../club-soccer-data/bronze-layer/player_match_bronze.sql
+        - file:
+            path: ../club-soccer-data/bronze-layer/team_match_level.sql
       
       configuration:
         soccer.datastore.extract: /mnt/soccerdatastore/extract
@@ -27,8 +27,8 @@ resources:
       target: "soccer_data_silver"
       libraries:
         # List all your Silver transformation scripts
-        - notebook:
-            path: club-soccer-data/silver-layer/results.py
+        - file:
+            path: ../club-soccer-data/silver-layer/results.py
 
     # =========================================================
     # 3. Gold Layer Pipeline
@@ -38,5 +38,5 @@ resources:
       target: "soccer_data_gold"
       libraries:
         # List all your Gold aggregation scripts
-        - notebook:
-            path: club-soccer-data/gold-layer/headline_form_table.py
+        - file:
+            path: ../club-soccer-data/gold-layer/headline_form_table.py
