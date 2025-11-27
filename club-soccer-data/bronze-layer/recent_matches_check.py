@@ -1,6 +1,18 @@
 import pyspark.sql.functions as F
 from pyspark.sql.types import *
+from pyspark.sql import SparkSession
+import sys
 
+# Initialize Spark Session and DBUtils for Python Script Task
+spark = SparkSession.builder.getOrCreate()
+
+try:
+    from pyspark.dbutils import DBUtils
+    dbutils = DBUtils(spark)
+except ImportError:
+    # Fallback for local testing where DBUtils might not be available
+    print("Warning: DBUtils not available.")
+    dbutils = None
 
 # 1. Define the path to your schedule data
 # Note: Confirm this is the correct folder for your "schedule" data.
@@ -10,6 +22,9 @@ try:
 except:
     # Fallback to the direct path if config is missing (e.g. interactive run)
     base_path = "abfss://extract@soccerdatastore.dfs.core.windows.net/"
+
+# Ensure no trailing slash to avoid double slashes
+base_path = base_path.rstrip("/")
 
 # 1. Define the path to your schedule data
 data_path = f"{base_path}/match_team_schedule"
@@ -23,8 +38,9 @@ try:
   print(f"Found latest file: {latest_file_path}")
 except Exception as e:
   print(f"Could not list files or folder is empty in {data_path}. Exiting.")
-  dbutils.jobs.taskValues.set(key="row_count", value=0)
-  dbutils.notebook.exit("No files found.")
+  if dbutils:
+      dbutils.jobs.taskValues.set(key="row_count", value=0)
+  sys.exit(0) # Exit successfully so the job continues (condition task will handle the 0)
 
 # 3. Read the Parquet file and apply your validation logic
 df = spark.read.parquet(latest_file_path)
