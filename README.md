@@ -50,7 +50,7 @@ soccer-data-store/
 ├── club-soccer-data/       # Databricks transformation logic (Bronze/Silver/Gold)
 ├── ingestion/              # Local/Standalone ingestion scripts
 ├── resources/              # Databricks Asset Bundle (DAB) definitions
-├── soccer data app/        # Streamlit frontend application
+├── soccer-data-app/        # Streamlit frontend application
 └── databricks.yml          # DAB configuration
 ```
 
@@ -64,7 +64,7 @@ databricks bundle run Club_Soccer_Data_Processing
 
 **2. Streamlit App**
 ```bash
-cd "soccer data app"
+cd soccer-data-app
 pip install -r requirements.txt
 streamlit run app.py
 ```
