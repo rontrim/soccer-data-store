@@ -168,8 +168,12 @@ with tab1:
         st.subheader("League Performance Analysis")
         
         # Columns available for plotting (exclude non-numeric/ID columns)
-        plot_cols = [c for c in df_headline_filtered.columns if c not in ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation"]]
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation", "Season", "League"]
+        plot_cols = [c for c in df_headline_filtered.columns if c not in exclude_cols]
         
+        # Columns that should be reversed (Lower is Better)
+        reverse_cols = ["L", "xGD L", "GA", "xGA", "GA PG", "xGA PG"]
+
         c1, c2, c3 = st.columns(3)
         with c1:
             x_axis = st.selectbox("X-Axis", plot_cols, index=plot_cols.index("xG") if "xG" in plot_cols else 0, key="l_x")
@@ -181,15 +185,23 @@ with tab1:
         if x_axis and y_axis and color_col:
             # Create Quartile Bins for Color
             try:
+                # Determine if color gradient should be reversed (Low = Good = Dark Green)
+                is_reverse_color = color_col in reverse_cols
+                
+                # If reversed, we want Low values to be Q4 (High Rank/Dark Green)
+                labels = ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]
+                if is_reverse_color:
+                    labels = ["Q4 (High)", "Q3", "Q2", "Q1 (Low)"]
+
                 df_headline_filtered["Quartile"] = pd.qcut(
                     df_headline_filtered[color_col], 
                     q=4, 
-                    labels=["Q1 (Low)", "Q2", "Q3", "Q4 (High)"],
+                    labels=labels,
                     duplicates='drop' # Handle cases with many duplicate values
                 )
             except ValueError:
                 # Fallback if not enough unique values for 4 bins
-                df_headline_filtered["Quartile"] = "Q1"
+                df_headline_filtered["Quartile"] = "Q1 (Low)"
 
             # Define discrete green colors
             color_map = {
@@ -204,7 +216,7 @@ with tab1:
                 x=x_axis,
                 y=y_axis,
                 color="Quartile", # Use the discrete bin column
-                text="Team Abbreviation" if "Team Abbreviation" in df_headline_filtered.columns else "Team",
+                text="Team_Abbreviation" if "Team_Abbreviation" in df_headline_filtered.columns else "Team",
                 color_discrete_map=color_map, # Use discrete map instead of continuous scale
                 category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]}, # Ensure legend order
                 hover_data=["Team", "Position", color_col]
@@ -223,9 +235,22 @@ with tab1:
                 plot_bgcolor='white'
             )
             
-            # Add gridlines
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+            # Remove gridlines
+            fig.update_xaxes(showgrid=False)
+            fig.update_yaxes(showgrid=False)
+
+            # Reverse Axes if needed
+            if x_axis in reverse_cols:
+                fig.update_xaxes(autorange="reversed")
+            if y_axis in reverse_cols:
+                fig.update_yaxes(autorange="reversed")
+
+            # Add Median Lines
+            x_median = df_headline_filtered[x_axis].median()
+            y_median = df_headline_filtered[y_axis].median()
+
+            fig.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
+            fig.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -258,8 +283,12 @@ with tab2:
         st.subheader("Form Analysis (Last 8 Games)")
         
         # Columns available for plotting
-        plot_cols_form = [c for c in df_form_filtered.columns if c not in ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation"]]
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation", "Season", "League"]
+        plot_cols_form = [c for c in df_form_filtered.columns if c not in exclude_cols]
         
+        # Columns that should be reversed (Lower is Better)
+        reverse_cols = ["L", "xGD L", "GA", "xGA", "GA PG", "xGA PG"]
+
         c1, c2, c3 = st.columns(3)
         with c1:
             x_axis_f = st.selectbox("X-Axis", plot_cols_form, index=plot_cols_form.index("xG") if "xG" in plot_cols_form else 0, key="f_x")
@@ -271,14 +300,22 @@ with tab2:
         if x_axis_f and y_axis_f and color_col_f:
             # Create Quartile Bins for Color
             try:
+                # Determine if color gradient should be reversed (Low = Good = Dark Green)
+                is_reverse_color = color_col_f in reverse_cols
+                
+                # If reversed, we want Low values to be Q4 (High Rank/Dark Green)
+                labels = ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]
+                if is_reverse_color:
+                    labels = ["Q4 (High)", "Q3", "Q2", "Q1 (Low)"]
+
                 df_form_filtered["Quartile"] = pd.qcut(
                     df_form_filtered[color_col_f], 
                     q=4, 
-                    labels=["Q1 (Low)", "Q2", "Q3", "Q4 (High)"],
+                    labels=labels,
                     duplicates='drop'
                 )
             except ValueError:
-                df_form_filtered["Quartile"] = "Q1"
+                df_form_filtered["Quartile"] = "Q1 (Low)"
 
             # Define discrete green colors
             color_map = {
@@ -293,7 +330,7 @@ with tab2:
                 x=x_axis_f,
                 y=y_axis_f,
                 color="Quartile",
-                text="Team Abbreviation" if "Team Abbreviation" in df_form_filtered.columns else "Team",
+                text="Team_Abbreviation" if "Team_Abbreviation" in df_form_filtered.columns else "Team",
                 color_discrete_map=color_map,
                 category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]},
                 hover_data=["Team", "Position", color_col_f]
@@ -312,9 +349,22 @@ with tab2:
                 plot_bgcolor='white'
             )
             
-            # Add gridlines
-            fig_f.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-            fig_f.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+            # Remove gridlines
+            fig_f.update_xaxes(showgrid=False)
+            fig_f.update_yaxes(showgrid=False)
+
+            # Reverse Axes if needed
+            if x_axis_f in reverse_cols:
+                fig_f.update_xaxes(autorange="reversed")
+            if y_axis_f in reverse_cols:
+                fig_f.update_yaxes(autorange="reversed")
+
+            # Add Median Lines
+            x_median = df_form_filtered[x_axis_f].median()
+            y_median = df_form_filtered[y_axis_f].median()
+
+            fig_f.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
+            fig_f.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig_f, use_container_width=True)
 
