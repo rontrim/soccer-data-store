@@ -216,7 +216,7 @@ with tab1:
                 x=x_axis,
                 y=y_axis,
                 color="Quartile", # Use the discrete bin column
-                text="Team_Abbreviation" if "Team_Abbreviation" in df_headline_filtered.columns else "Team",
+                text="Team Abbreviation" if "Team Abbreviation" in df_headline_filtered.columns else "Team",
                 color_discrete_map=color_map, # Use discrete map instead of continuous scale
                 category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]}, # Ensure legend order
                 hover_data=["Team", "Position", color_col]
@@ -330,7 +330,7 @@ with tab2:
                 x=x_axis_f,
                 y=y_axis_f,
                 color="Quartile",
-                text="Team_Abbreviation" if "Team_Abbreviation" in df_form_filtered.columns else "Team",
+                text="Team Abbreviation" if "Team Abbreviation" in df_form_filtered.columns else "Team",
                 color_discrete_map=color_map,
                 category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]},
                 hover_data=["Team", "Position", color_col_f]
