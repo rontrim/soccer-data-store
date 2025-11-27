@@ -125,14 +125,29 @@ shared_column_config = {
     )
 }
 
+# Desired column order
+column_order = [
+    "Position", "Team", "MP", "W", "D", "L", "Points", "PPG",
+    "xGD W", "xGD D", "xGD L", "xGD Points", "xGD PPG",
+    "G", "GA", "GD", "xG", "xGA", "xGD",
+    "G PG", "GA PG", "GD PG", "xG PG", "xGA PG", "xGD PG",
+    "Possession"
+]
+
 with tab1:
     if not df_headline_filtered.empty:
         # Sort by Points
         if "Points" in df_headline_filtered.columns:
              df_headline_filtered = df_headline_filtered.sort_values(by=["Points"], ascending=False)
+        
+        # Add Position
+        df_headline_filtered["Position"] = range(1, len(df_headline_filtered) + 1)
+        
+        # Filter columns (intersection with available columns to avoid errors)
+        cols = [c for c in column_order if c in df_headline_filtered.columns]
              
         st.dataframe(
-            df_headline_filtered, 
+            df_headline_filtered[cols], 
             use_container_width=True, 
             hide_index=True,
             column_config=shared_column_config
@@ -148,8 +163,14 @@ with tab2:
         if "Points" in df_form_filtered.columns:
             df_form_filtered = df_form_filtered.sort_values(by="Points", ascending=False)
             
+        # Add Position
+        df_form_filtered["Position"] = range(1, len(df_form_filtered) + 1)
+
+        # Filter columns
+        cols = [c for c in column_order if c in df_form_filtered.columns]
+            
         st.dataframe(
-            df_form_filtered, 
+            df_form_filtered[cols], 
             use_container_width=True, 
             hide_index=True,
             column_config=shared_column_config
