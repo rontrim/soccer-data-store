@@ -1,6 +1,7 @@
 import streamlit as st
 from databricks import sql
 import pandas as pd
+import plotly.express as px
 import os
 
 # ============================================================
@@ -65,9 +66,15 @@ with st.spinner("Loading stats..."):
 # --- Transformation: Replace Underscores with Spaces ---
 if not df_headline.empty:
     df_headline.columns = [c.replace("_", " ") for c in df_headline.columns]
+    # Rename team code understat to Team_Abbreviation if it exists
+    if "team code understat" in df_headline.columns:
+        df_headline = df_headline.rename(columns={"team code understat": "Team_Abbreviation"})
 
 if not df_form.empty:
     df_form.columns = [c.replace("_", " ") for c in df_form.columns]
+    # Rename team code understat to Team_Abbreviation if it exists
+    if "team code understat" in df_form.columns:
+        df_form = df_form.rename(columns={"team code understat": "Team_Abbreviation"})
 
 # ============================================================
 # 4. Filters
@@ -107,6 +114,7 @@ tab1, tab2 = st.tabs(["League Table", "Form Table (Last 8 Games)"])
 # Define shared column configuration for tooltips and formatting
 shared_column_config = {
     "Team-Season": None, # Hide ID
+    "Team_Abbreviation": None, # Hide Abbreviation
     "Possession": st.column_config.ProgressColumn(
         "Possession %", 
         format="%.1f", 
@@ -154,6 +162,73 @@ with tab1:
         )
         # Footnote
         st.caption("Source: Opta")
+
+        # --- Scatter Plot ---
+        st.divider()
+        st.subheader("League Performance Analysis")
+        
+        # Columns available for plotting (exclude non-numeric/ID columns)
+        plot_cols = [c for c in df_headline_filtered.columns if c not in ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation"]]
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_axis = st.selectbox("X-Axis", plot_cols, index=plot_cols.index("xG") if "xG" in plot_cols else 0, key="l_x")
+        with c2:
+            y_axis = st.selectbox("Y-Axis", plot_cols, index=plot_cols.index("G") if "G" in plot_cols else 0, key="l_y")
+        with c3:
+            color_col = st.selectbox("Color Gradient", plot_cols, index=plot_cols.index("Points") if "Points" in plot_cols else 0, key="l_c")
+
+        if x_axis and y_axis and color_col:
+            # Create Quartile Bins for Color
+            try:
+                df_headline_filtered["Quartile"] = pd.qcut(
+                    df_headline_filtered[color_col], 
+                    q=4, 
+                    labels=["Q1 (Low)", "Q2", "Q3", "Q4 (High)"],
+                    duplicates='drop' # Handle cases with many duplicate values
+                )
+            except ValueError:
+                # Fallback if not enough unique values for 4 bins
+                df_headline_filtered["Quartile"] = "Q1"
+
+            # Define discrete green colors
+            color_map = {
+                "Q1 (Low)": "#C8E6C9", # Lightest
+                "Q2": "#81C784",
+                "Q3": "#43A047",
+                "Q4 (High)": "#1B5E20" # Darkest
+            }
+
+            fig = px.scatter(
+                df_headline_filtered,
+                x=x_axis,
+                y=y_axis,
+                color="Quartile", # Use the discrete bin column
+                text="Team_Abbreviation" if "Team_Abbreviation" in df_headline_filtered.columns else "Team",
+                color_discrete_map=color_map, # Use discrete map instead of continuous scale
+                category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]}, # Ensure legend order
+                hover_data=["Team", "Position", color_col]
+            )
+            
+            fig.update_traces(
+                textposition='bottom center',
+                textfont=dict(color='black', size=10),
+                marker=dict(size=12, line=dict(width=1, color='DarkSlateGrey'))
+            )
+            
+            fig.update_layout(
+                xaxis_title=x_axis,
+                yaxis_title=y_axis,
+                font=dict(color='black'),
+                plot_bgcolor='white'
+            )
+            
+            # Add gridlines
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+
+            st.plotly_chart(fig, use_container_width=True)
+
     else:
         st.info("No data found for the selected filters.")
 
@@ -177,5 +252,71 @@ with tab2:
         )
         # Footnote
         st.caption("Source: Opta")
+
+        # --- Scatter Plot ---
+        st.divider()
+        st.subheader("Form Analysis (Last 8 Games)")
+        
+        # Columns available for plotting
+        plot_cols_form = [c for c in df_form_filtered.columns if c not in ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation"]]
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_axis_f = st.selectbox("X-Axis", plot_cols_form, index=plot_cols_form.index("xG") if "xG" in plot_cols_form else 0, key="f_x")
+        with c2:
+            y_axis_f = st.selectbox("Y-Axis", plot_cols_form, index=plot_cols_form.index("G") if "G" in plot_cols_form else 0, key="f_y")
+        with c3:
+            color_col_f = st.selectbox("Color Gradient", plot_cols_form, index=plot_cols_form.index("Points") if "Points" in plot_cols_form else 0, key="f_c")
+
+        if x_axis_f and y_axis_f and color_col_f:
+            # Create Quartile Bins for Color
+            try:
+                df_form_filtered["Quartile"] = pd.qcut(
+                    df_form_filtered[color_col_f], 
+                    q=4, 
+                    labels=["Q1 (Low)", "Q2", "Q3", "Q4 (High)"],
+                    duplicates='drop'
+                )
+            except ValueError:
+                df_form_filtered["Quartile"] = "Q1"
+
+            # Define discrete green colors
+            color_map = {
+                "Q1 (Low)": "#C8E6C9", # Lightest
+                "Q2": "#81C784",
+                "Q3": "#43A047",
+                "Q4 (High)": "#1B5E20" # Darkest
+            }
+
+            fig_f = px.scatter(
+                df_form_filtered,
+                x=x_axis_f,
+                y=y_axis_f,
+                color="Quartile",
+                text="Team_Abbreviation" if "Team_Abbreviation" in df_form_filtered.columns else "Team",
+                color_discrete_map=color_map,
+                category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]},
+                hover_data=["Team", "Position", color_col_f]
+            )
+            
+            fig_f.update_traces(
+                textposition='bottom center',
+                textfont=dict(color='black', size=10),
+                marker=dict(size=12, line=dict(width=1, color='DarkSlateGrey'))
+            )
+            
+            fig_f.update_layout(
+                xaxis_title=x_axis_f,
+                yaxis_title=y_axis_f,
+                font=dict(color='black'),
+                plot_bgcolor='white'
+            )
+            
+            # Add gridlines
+            fig_f.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+            fig_f.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
+
+            st.plotly_chart(fig_f, use_container_width=True)
+
     else:
         st.info("No form data found.")
