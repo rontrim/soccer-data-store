@@ -88,7 +88,7 @@ def apply_transformations_and_ratios(df):
 )
 def headline_stats():
     df = dlt.read(SOURCE_TABLE)
-    aggregated_df = df.groupBy("team_id", "team", "season", "league").agg(*get_common_aggregations())
+    aggregated_df = df.groupBy("team_id", "team", "team_code_understat", "season", "league").agg(*get_common_aggregations())
     return apply_transformations_and_ratios(aggregated_df)
 
 # ============================================================
@@ -120,5 +120,5 @@ def form_stats():
         .filter(F.col("match_rank") <= 8)
     )
     
-    aggregated_df = last_8_df.groupBy("team_id", "team", "season", "league").agg(*get_common_aggregations())
+    aggregated_df = last_8_df.groupBy("team_id", "team", "team_code_understat", "season", "league").agg(*get_common_aggregations())
     return apply_transformations_and_ratios(aggregated_df)
