@@ -15,7 +15,7 @@ This project is a **Databricks Asset Bundle (DAB)** implementing a **Medallion A
 - **Ingestion (`ingestion/`)**:
   - Standalone Python scripts for fetching raw data.
   - `run_ingestion_scripts.py`: Orchestrator for local/manual ingestion.
-- **Frontend (`soccer data app/`)**:
+- **Frontend (`soccer-data-app/`)**:
   - `app.py`: Streamlit dashboard connecting to Databricks SQL Warehouse.
 
 ## 🚀 Developer Workflows
@@ -25,7 +25,7 @@ This project is a **Databricks Asset Bundle (DAB)** implementing a **Medallion A
   - Use `databricks bundle deploy` to deploy resources to the workspace.
   - Use `databricks bundle run <job_key>` to trigger jobs manually.
 - **Streamlit App**:
-  - Run locally: `streamlit run "soccer data app/app.py"`.
+  - Run locally: `streamlit run soccer-data-app/app.py`.
   - Requires `secrets.toml` (or `st.secrets`) with `DATABRICKS_HOST`, `DATABRICKS_TOKEN`, and `SQL_HTTP_PATH`.
 
 ## 🧩 Key Patterns & Conventions
