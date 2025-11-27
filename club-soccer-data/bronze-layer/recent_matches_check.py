@@ -5,7 +5,11 @@ from pyspark.sql.types import *
 # 1. Define the path to your schedule data
 # Note: Confirm this is the correct folder for your "schedule" data.
 # Get the base path from the Spark configuration set in the job task
-base_path = "abfss://extract@soccerdatastore.dfs.core.windows.net/"
+try:
+    base_path = spark.conf.get("soccer.datastore.extract")
+except:
+    # Fallback to the direct path if config is missing (e.g. interactive run)
+    base_path = "abfss://extract@soccerdatastore.dfs.core.windows.net/"
 
 # 1. Define the path to your schedule data
 data_path = f"{base_path}/match_team_schedule"
