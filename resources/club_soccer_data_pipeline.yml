@@ -22,7 +22,7 @@ resources:
           job_cluster_key: club_soccer_ingestion # Assigned to the cluster defined below
           spark_python_task:
             # UPDATED: Relative path to the file in your repo
-            python_file: ../club-soccer-data/bronze-layer/recent_matches_check.py
+            python_file: club-soccer-data/bronze-layer/recent_matches_check.py
           environment_key: Default
 
         # ----------------------------------------------------------------
