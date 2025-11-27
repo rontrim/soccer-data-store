@@ -68,6 +68,7 @@ def apply_transformations_and_ratios(df):
         .withColumnRenamed("league", "League")
         .withColumnRenamed("team_id", "Team-Season")
         .withColumnRenamed("team", "Team")
+        .withColumnRenamed("team_code_understat", "Team_Abbreviation")
     )
 
 # ============================================================
