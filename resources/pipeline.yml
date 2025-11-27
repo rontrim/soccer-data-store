@@ -7,7 +7,6 @@ resources:
       name: "Soccer Data - Bronze Layer"
       target: "soccer_data_bronze"
       libraries:
-        # Add as many scripts as you need here using a hyphen (-)
         - file:
             path: ../club-soccer-data/bronze-layer/player_match_bronze.sql
         - file:
