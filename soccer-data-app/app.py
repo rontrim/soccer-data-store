@@ -283,7 +283,7 @@ with tab2:
         st.subheader("Form Analysis (Last 8 Games)")
         
         # Columns available for plotting
-        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation", "Season", "League"]
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team Abbreviation", "Season", "League"]
         plot_cols_form = [c for c in df_form_filtered.columns if c not in exclude_cols]
         
         # Columns that should be reversed (Lower is Better)
