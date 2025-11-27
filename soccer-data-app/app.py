@@ -235,9 +235,9 @@ with tab1:
                 plot_bgcolor='white'
             )
             
-            # Remove gridlines
-            fig.update_xaxes(showgrid=False)
-            fig.update_yaxes(showgrid=False)
+            # Remove gridlines and zerolines
+            fig.update_xaxes(showgrid=False, zeroline=False)
+            fig.update_yaxes(showgrid=False, zeroline=False)
 
             # Reverse Axes if needed
             if x_axis in reverse_cols:
@@ -349,9 +349,9 @@ with tab2:
                 plot_bgcolor='white'
             )
             
-            # Remove gridlines
-            fig_f.update_xaxes(showgrid=False)
-            fig_f.update_yaxes(showgrid=False)
+            # Remove gridlines and zerolines
+            fig_f.update_xaxes(showgrid=False, zeroline=False)
+            fig_f.update_yaxes(showgrid=False, zeroline=False)
 
             # Reverse Axes if needed
             if x_axis_f in reverse_cols:
