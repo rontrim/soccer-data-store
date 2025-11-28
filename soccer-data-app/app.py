@@ -152,7 +152,7 @@ column_order = [
     "Possession"
 ]
 
-column_order_combined = ["Position", "Season", "Team"] + [c for c in column_order if c not in ["Position", "Team"]]
+column_order_combined = ["Position", "League", "Team"] + [c for c in column_order if c not in ["Position", "Team"]]
 
 with tab1:
     if not df_headline_filtered.empty:
