@@ -9,20 +9,27 @@ A comprehensive data pipeline and analytics application for Big 5 European socce
 ## ✨ Key Features
 
 - **Multi-League Analytics**: Compare teams across the Big 5 leagues.
-- **Interactive Dashboard**: Built with Streamlit for real-time data exploration.
-- **Advanced Metrics**: Includes expected goals differential (xGD), possession stats, and performance indicators.
-- **Dynamic Filtering**: Filter by league and season to analyze specific competitions.
-- **Form Tracking**: Monitor team performance over the last 8 games.
+- **Interactive Dashboard**: Built with Streamlit for real-time data exploration with dynamic filtering by league and season.
+- **Advanced Metrics**: Includes expected goals differential (xGD), possession stats, and performance indicators (xG, xGA, PPG).
+- **Customizable Performance Plots**: Interactive scatter plots with user-selectable axes for deep performance analysis.
+- **Quartile Analysis**: Visual color-coding of teams based on performance quartiles (Q1-Q4) for selected metrics.
+- **Form Tracking**: Monitor team performance over the last 8 games with dedicated tables and visual analysis.
 - **Cloud Integration**: Powered by Databricks for scalable data processing.
 
 ## 📊 Dashboard Overview
 
-The application provides two main views:
+The application provides two main views, each equipped with data tables and analytical visualizations:
 
-1.  **League Table**: Live season standings sorted by points, featuring:
-    - Possession percentage bars.
-    - xGD (Expected Goals Difference) analysis.
-2.  **Form Table**: A deep dive into the last 8 games to see who is hot and who is not.
+1.  **League Table**:
+    -   Live season standings sorted by points.
+    -   Visual indicators for **Possession %** and **xGD breakdown** (Wins/Draws/Losses).
+    -   **League Performance Analysis**: A customizable scatter plot allowing users to correlate any two metrics (e.g., xG vs. Goals). It features:
+        -   **Quartile Coloring**: Teams are color-coded from light to dark green based on a third metric (e.g., Points).
+        -   **Median Lines**: Dashed lines indicating the league median for both axes to benchmark performance.
+
+2.  **Form Table (Last 8 Games)**:
+    -   A focused view on recent performance.
+    -   **Form Analysis**: Similar to the league view, this includes a customizable scatter plot to visualize current form trends using the same quartile and median benchmarking tools.
 
 ## 🏗️ How It Works (The Data Journey)
 
