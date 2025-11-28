@@ -106,10 +106,20 @@ if not df_headline.empty and "Season" in df_headline.columns:
     # Apply ONLY to headline stats
     df_headline_filtered = df_headline_filtered[df_headline_filtered["Season"] == selected_season]
 
+# Create Combined DataFrames (All Leagues, Selected Season)
+df_headline_combined = df_headline.copy() if not df_headline.empty else pd.DataFrame()
+df_form_combined = df_form.copy() if not df_form.empty else pd.DataFrame()
+
+if selected_season:
+    if not df_headline_combined.empty and "Season" in df_headline_combined.columns:
+        df_headline_combined = df_headline_combined[df_headline_combined["Season"] == selected_season]
+    if not df_form_combined.empty and "Season" in df_form_combined.columns:
+        df_form_combined = df_form_combined[df_form_combined["Season"] == selected_season]
+
 # ============================================================
 # 5. Main UI Tabs
 # ============================================================
-tab1, tab2 = st.tabs(["League Table", "Form Table (Last 8 Games)"])
+tab1, tab2, tab3, tab4 = st.tabs(["League Table", "Form Table (Last 8 Games)", "Combined League Table", "Combined Form Table (Last 8 Games)"])
 
 # Define shared column configuration for tooltips and formatting
 shared_column_config = {
@@ -141,6 +151,8 @@ column_order = [
     "G PG", "GA PG", "GD PG", "xG PG", "xGA PG", "xGD PG",
     "Possession"
 ]
+
+column_order_combined = ["Position", "Team", "League"] + [c for c in column_order if c not in ["Position", "Team"]]
 
 with tab1:
     if not df_headline_filtered.empty:
@@ -252,7 +264,7 @@ with tab1:
             fig.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
     else:
         st.info("No data found for the selected filters.")
@@ -366,7 +378,241 @@ with tab2:
             fig_f.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_f.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_f, use_container_width=True)
+            st.plotly_chart(fig_f, width='stretch')
 
     else:
         st.info("No form data found.")
+
+with tab3:
+    if not df_headline_combined.empty:
+        # --- Sort Controls ---
+        c_sort1, c_sort2 = st.columns([1, 3])
+        with c_sort1:
+            # Exclude Position from sort options
+            sort_options = [c for c in column_order_combined if c != "Position"]
+            # Default to PPG
+            default_idx = sort_options.index("PPG") if "PPG" in sort_options else 0
+            sort_col = st.selectbox("Sort Table By", sort_options, index=default_idx, key="sort_c_l")
+        with c_sort2:
+            sort_asc = st.radio("Order", ["Descending", "Ascending"], index=0, horizontal=True, key="order_c_l")
+        
+        ascending = sort_asc == "Ascending"
+        
+        # Sort
+        if sort_col in df_headline_combined.columns:
+             df_headline_combined = df_headline_combined.sort_values(by=[sort_col], ascending=ascending)
+        
+        # Add Position
+        df_headline_combined["Position"] = range(1, len(df_headline_combined) + 1)
+        
+        # Filter columns
+        cols = [c for c in column_order_combined if c in df_headline_combined.columns]
+             
+        st.dataframe(
+            df_headline_combined[cols], 
+            width="stretch", 
+            hide_index=True,
+            column_config=shared_column_config
+        )
+        st.caption("Source: Opta | Includes all Big 5 League teams for the selected season")
+
+        # --- Scatter Plot ---
+        st.divider()
+        st.subheader("Combined League Performance Analysis")
+        
+        # Columns available for plotting
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team Abbreviation", "Season", "League"]
+        plot_cols_combined = [c for c in df_headline_combined.columns if c not in exclude_cols]
+        
+        reverse_cols = ["L", "xGD L", "GA", "xGA", "GA PG", "xGA PG"]
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_axis_c = st.selectbox("X-Axis", plot_cols_combined, index=plot_cols_combined.index("xG") if "xG" in plot_cols_combined else 0, key="c_l_x")
+        with c2:
+            y_axis_c = st.selectbox("Y-Axis", plot_cols_combined, index=plot_cols_combined.index("G") if "G" in plot_cols_combined else 0, key="c_l_y")
+        with c3:
+            color_col_c = st.selectbox("Color by", plot_cols_combined, index=plot_cols_combined.index("Points") if "Points" in plot_cols_combined else 0, key="c_l_c")
+
+        if x_axis_c and y_axis_c and color_col_c:
+            try:
+                is_reverse_color = color_col_c in reverse_cols
+                labels = ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]
+                if is_reverse_color:
+                    labels = ["Q4 (High)", "Q3", "Q2", "Q1 (Low)"]
+
+                df_headline_combined["Quartile"] = pd.qcut(
+                    df_headline_combined[color_col_c], 
+                    q=4, 
+                    labels=labels,
+                    duplicates='drop'
+                )
+            except ValueError:
+                df_headline_combined["Quartile"] = "Q1 (Low)"
+
+            color_map = {
+                "Q1 (Low)": "#C8E6C9",
+                "Q2": "#81C784",
+                "Q3": "#43A047",
+                "Q4 (High)": "#1B5E20"
+            }
+
+            fig_c = px.scatter(
+                df_headline_combined,
+                x=x_axis_c,
+                y=y_axis_c,
+                color="Quartile",
+                text="Team Abbreviation" if "Team Abbreviation" in df_headline_combined.columns else "Team",
+                color_discrete_map=color_map,
+                category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]},
+                hover_data=["Team", "Position", color_col_c]
+            )
+            
+            fig_c.update_traces(
+                textposition='bottom center',
+                textfont=dict(color='black', size=10),
+                marker=dict(size=12, line=dict(width=1, color='DarkSlateGrey'))
+            )
+            
+            fig_c.update_layout(
+                xaxis_title=x_axis_c,
+                yaxis_title=y_axis_c,
+                font=dict(color='black'),
+                plot_bgcolor='white'
+            )
+            
+            fig_c.update_xaxes(showgrid=False, zeroline=False)
+            fig_c.update_yaxes(showgrid=False, zeroline=False)
+
+            if x_axis_c in reverse_cols:
+                fig_c.update_xaxes(autorange="reversed")
+            if y_axis_c in reverse_cols:
+                fig_c.update_yaxes(autorange="reversed")
+
+            x_median = df_headline_combined[x_axis_c].median()
+            y_median = df_headline_combined[y_axis_c].median()
+
+            fig_c.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
+            fig_c.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
+
+            st.plotly_chart(fig_c, width='stretch')
+
+    else:
+        st.info("No combined data found.")
+
+with tab4:
+    if not df_form_combined.empty:
+        # --- Sort Controls ---
+        c_sort1, c_sort2 = st.columns([1, 3])
+        with c_sort1:
+            # Exclude Position from sort options
+            sort_options_f = [c for c in column_order_combined if c != "Position"]
+            # Default to PPG
+            default_idx_f = sort_options_f.index("PPG") if "PPG" in sort_options_f else 0
+            sort_col_f = st.selectbox("Sort Table By", sort_options_f, index=default_idx_f, key="sort_c_f")
+        with c_sort2:
+            sort_asc_f = st.radio("Order", ["Descending", "Ascending"], index=0, horizontal=True, key="order_c_f")
+        
+        ascending_f = sort_asc_f == "Ascending"
+        
+        # Sort
+        if sort_col_f in df_form_combined.columns:
+            df_form_combined = df_form_combined.sort_values(by=[sort_col_f], ascending=ascending_f)
+        
+        # Add Position
+        df_form_combined["Position"] = range(1, len(df_form_combined) + 1)
+
+        # Filter columns
+        cols = [c for c in column_order_combined if c in df_form_combined.columns]
+            
+        st.dataframe(
+            df_form_combined[cols], 
+            width="stretch", 
+            hide_index=True,
+            column_config=shared_column_config
+        )
+        st.caption("Source: Opta | Includes all Big 5 League teams for the selected season")
+
+        # --- Scatter Plot ---
+        st.divider()
+        st.subheader("Combined Form Analysis (Last 8 Games)")
+        
+        # Columns available for plotting
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team Abbreviation", "Season", "League"]
+        plot_cols_form_c = [c for c in df_form_combined.columns if c not in exclude_cols]
+        
+        reverse_cols = ["L", "xGD L", "GA", "xGA", "GA PG", "xGA PG"]
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_axis_fc = st.selectbox("X-Axis", plot_cols_form_c, index=plot_cols_form_c.index("xG") if "xG" in plot_cols_form_c else 0, key="c_f_x")
+        with c2:
+            y_axis_fc = st.selectbox("Y-Axis", plot_cols_form_c, index=plot_cols_form_c.index("G") if "G" in plot_cols_form_c else 0, key="c_f_y")
+        with c3:
+            color_col_fc = st.selectbox("Color by", plot_cols_form_c, index=plot_cols_form_c.index("Points") if "Points" in plot_cols_form_c else 0, key="c_f_c")
+
+        if x_axis_fc and y_axis_fc and color_col_fc:
+            try:
+                is_reverse_color = color_col_fc in reverse_cols
+                labels = ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]
+                if is_reverse_color:
+                    labels = ["Q4 (High)", "Q3", "Q2", "Q1 (Low)"]
+
+                df_form_combined["Quartile"] = pd.qcut(
+                    df_form_combined[color_col_fc], 
+                    q=4, 
+                    labels=labels,
+                    duplicates='drop'
+                )
+            except ValueError:
+                df_form_combined["Quartile"] = "Q1 (Low)"
+
+            color_map = {
+                "Q1 (Low)": "#C8E6C9",
+                "Q2": "#81C784",
+                "Q3": "#43A047",
+                "Q4 (High)": "#1B5E20"
+            }
+
+            fig_fc = px.scatter(
+                df_form_combined,
+                x=x_axis_fc,
+                y=y_axis_fc,
+                color="Quartile",
+                text="Team Abbreviation" if "Team Abbreviation" in df_form_combined.columns else "Team",
+                color_discrete_map=color_map,
+                category_orders={"Quartile": ["Q1 (Low)", "Q2", "Q3", "Q4 (High)"]},
+                hover_data=["Team", "Position", color_col_fc]
+            )
+            
+            fig_fc.update_traces(
+                textposition='bottom center',
+                textfont=dict(color='black', size=10),
+                marker=dict(size=12, line=dict(width=1, color='DarkSlateGrey'))
+            )
+            
+            fig_fc.update_layout(
+                xaxis_title=x_axis_fc,
+                yaxis_title=y_axis_fc,
+                font=dict(color='black'),
+                plot_bgcolor='white'
+            )
+            
+            fig_fc.update_xaxes(showgrid=False, zeroline=False)
+            fig_fc.update_yaxes(showgrid=False, zeroline=False)
+
+            if x_axis_fc in reverse_cols:
+                fig_fc.update_xaxes(autorange="reversed")
+            if y_axis_fc in reverse_cols:
+                fig_fc.update_yaxes(autorange="reversed")
+
+            x_median = df_form_combined[x_axis_fc].median()
+            y_median = df_form_combined[y_axis_fc].median()
+
+            fig_fc.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
+            fig_fc.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
+
+            st.plotly_chart(fig_fc, width='stretch')
+
+    else:
+        st.info("No combined form data found.")
