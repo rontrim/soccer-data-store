@@ -156,7 +156,7 @@ with tab1:
              
         st.dataframe(
             df_headline_filtered[cols], 
-            use_container_width=True, 
+            width="stretch", 
             hide_index=True,
             column_config=shared_column_config
         )
@@ -271,7 +271,7 @@ with tab2:
             
         st.dataframe(
             df_form_filtered[cols], 
-            use_container_width=True, 
+            width="stretch", 
             hide_index=True,
             column_config=shared_column_config
         )
