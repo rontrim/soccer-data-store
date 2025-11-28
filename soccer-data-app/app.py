@@ -385,9 +385,22 @@ with tab2:
 
 with tab3:
     if not df_headline_combined.empty:
-        # Sort by PPG
-        if "PPG" in df_headline_combined.columns:
-             df_headline_combined = df_headline_combined.sort_values(by=["PPG"], ascending=False)
+        # --- Sort Controls ---
+        c_sort1, c_sort2 = st.columns([1, 3])
+        with c_sort1:
+            # Exclude Position from sort options
+            sort_options = [c for c in column_order_combined if c != "Position"]
+            # Default to PPG
+            default_idx = sort_options.index("PPG") if "PPG" in sort_options else 0
+            sort_col = st.selectbox("Sort Table By", sort_options, index=default_idx, key="sort_c_l")
+        with c_sort2:
+            sort_asc = st.radio("Order", ["Descending", "Ascending"], index=0, horizontal=True, key="order_c_l")
+        
+        ascending = sort_asc == "Ascending"
+        
+        # Sort
+        if sort_col in df_headline_combined.columns:
+             df_headline_combined = df_headline_combined.sort_values(by=[sort_col], ascending=ascending)
         
         # Add Position
         df_headline_combined["Position"] = range(1, len(df_headline_combined) + 1)
@@ -489,9 +502,22 @@ with tab3:
 
 with tab4:
     if not df_form_combined.empty:
-        # Sort by PPG
-        if "PPG" in df_form_combined.columns:
-            df_form_combined = df_form_combined.sort_values(by="PPG", ascending=False)
+        # --- Sort Controls ---
+        c_sort1, c_sort2 = st.columns([1, 3])
+        with c_sort1:
+            # Exclude Position from sort options
+            sort_options_f = [c for c in column_order_combined if c != "Position"]
+            # Default to PPG
+            default_idx_f = sort_options_f.index("PPG") if "PPG" in sort_options_f else 0
+            sort_col_f = st.selectbox("Sort Table By", sort_options_f, index=default_idx_f, key="sort_c_f")
+        with c_sort2:
+            sort_asc_f = st.radio("Order", ["Descending", "Ascending"], index=0, horizontal=True, key="order_c_f")
+        
+        ascending_f = sort_asc_f == "Ascending"
+        
+        # Sort
+        if sort_col_f in df_form_combined.columns:
+            df_form_combined = df_form_combined.sort_values(by=[sort_col_f], ascending=ascending_f)
         
         # Add Position
         df_form_combined["Position"] = range(1, len(df_form_combined) + 1)
