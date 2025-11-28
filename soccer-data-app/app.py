@@ -180,7 +180,7 @@ with tab1:
         with c2:
             y_axis = st.selectbox("Y-Axis", plot_cols, index=plot_cols.index("G") if "G" in plot_cols else 0, key="l_y")
         with c3:
-            color_col = st.selectbox("Color Gradient", plot_cols, index=plot_cols.index("Points") if "Points" in plot_cols else 0, key="l_c")
+            color_col = st.selectbox("Color by", plot_cols, index=plot_cols.index("Points") if "Points" in plot_cols else 0, key="l_c")
 
         if x_axis and y_axis and color_col:
             # Create Quartile Bins for Color
@@ -283,7 +283,7 @@ with tab2:
         st.subheader("Form Analysis (Last 8 Games)")
         
         # Columns available for plotting
-        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team_Abbreviation", "Season", "League"]
+        exclude_cols = ["Position", "Team", "MP", "Team-Season", "Team Abbreviation", "Season", "League"]
         plot_cols_form = [c for c in df_form_filtered.columns if c not in exclude_cols]
         
         # Columns that should be reversed (Lower is Better)
@@ -295,7 +295,7 @@ with tab2:
         with c2:
             y_axis_f = st.selectbox("Y-Axis", plot_cols_form, index=plot_cols_form.index("G") if "G" in plot_cols_form else 0, key="f_y")
         with c3:
-            color_col_f = st.selectbox("Color Gradient", plot_cols_form, index=plot_cols_form.index("Points") if "Points" in plot_cols_form else 0, key="f_c")
+            color_col_f = st.selectbox("Color by", plot_cols_form, index=plot_cols_form.index("Points") if "Points" in plot_cols_form else 0, key="f_c")
 
         if x_axis_f and y_axis_f and color_col_f:
             # Create Quartile Bins for Color
