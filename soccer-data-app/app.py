@@ -264,7 +264,7 @@ with tab1:
             fig.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
     else:
         st.info("No data found for the selected filters.")
@@ -378,7 +378,7 @@ with tab2:
             fig_f.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_f.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_f, use_container_width=True)
+            st.plotly_chart(fig_f, width='stretch')
 
     else:
         st.info("No form data found.")
@@ -482,7 +482,7 @@ with tab3:
             fig_c.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_c.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_c, use_container_width=True)
+            st.plotly_chart(fig_c, width='stretch')
 
     else:
         st.info("No combined data found.")
@@ -586,7 +586,7 @@ with tab4:
             fig_fc.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_fc.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_fc, use_container_width=True)
+            st.plotly_chart(fig_fc, width='stretch')
 
     else:
         st.info("No combined form data found.")
