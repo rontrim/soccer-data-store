@@ -384,7 +384,6 @@ with tab2:
         st.info("No form data found.")
 
 with tab3:
-    st.info("ℹ️ Includes all Big 5 League teams for the selected season")
     if not df_headline_combined.empty:
         # --- Sort Controls ---
         c_sort1, c_sort2 = st.columns([1, 3])
@@ -415,7 +414,7 @@ with tab3:
             hide_index=True,
             column_config=shared_column_config
         )
-        st.caption("Source: Opta")
+        st.caption("Source: Opta | Includes all Big 5 League teams for the selected season")
 
         # --- Scatter Plot ---
         st.divider()
@@ -502,7 +501,6 @@ with tab3:
         st.info("No combined data found.")
 
 with tab4:
-    st.info("ℹ️ Includes all Big 5 League teams for the selected season")
     if not df_form_combined.empty:
         # --- Sort Controls ---
         c_sort1, c_sort2 = st.columns([1, 3])
@@ -533,7 +531,7 @@ with tab4:
             hide_index=True,
             column_config=shared_column_config
         )
-        st.caption("Source: Opta")
+        st.caption("Source: Opta | Includes all Big 5 League teams for the selected season")
 
         # --- Scatter Plot ---
         st.divider()
