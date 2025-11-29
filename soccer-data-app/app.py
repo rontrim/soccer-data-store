@@ -12,5 +12,5 @@ seasonal_page = st.Page("pages/seasonal_overview.py", title="Seasonal Overview",
 historic_page = st.Page("pages/Historic_Overview.py", title="Historic Overview", icon="⏳")
 
 # Navigation
-pg = st.navigation([seasonal_page, historic_page])
+pg = st.navigation({"Overview": [seasonal_page, historic_page]})
 pg.run()
