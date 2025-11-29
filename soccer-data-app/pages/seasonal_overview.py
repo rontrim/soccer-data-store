@@ -367,8 +367,9 @@ with tab3:
         # --- Sort Controls ---
         c_sort1, c_sort2 = st.columns([1, 3])
         with c_sort1:
-            # Exclude Position from sort options
-            sort_options = [c for c in column_order_combined if c != "Position"]
+            # Exclude Position and non-metric columns from sort options
+            exclude_sort = ["Position", "Team", "League", "Season", "MP"]
+            sort_options = [c for c in column_order_combined if c not in exclude_sort]
             # Default to PPG
             default_idx = sort_options.index("PPG") if "PPG" in sort_options else 0
             sort_col = st.selectbox("Sort Table By", sort_options, index=default_idx, key="sort_c_l")
@@ -484,8 +485,9 @@ with tab4:
         # --- Sort Controls ---
         c_sort1, c_sort2 = st.columns([1, 3])
         with c_sort1:
-            # Exclude Position from sort options
-            sort_options_f = [c for c in column_order_combined if c != "Position"]
+            # Exclude Position and non-metric columns from sort options
+            exclude_sort = ["Position", "Team", "League", "Season", "MP"]
+            sort_options_f = [c for c in column_order_combined if c not in exclude_sort]
             # Default to PPG
             default_idx_f = sort_options_f.index("PPG") if "PPG" in sort_options_f else 0
             sort_col_f = st.selectbox("Sort Table By", sort_options_f, index=default_idx_f, key="sort_c_f")

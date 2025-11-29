@@ -57,6 +57,16 @@ if not df_headline.empty and "League" in df_headline.columns:
     if selected_league != "All Leagues":
         df_filtered = df_filtered[df_filtered["League"] == selected_league]
 
+# --- Filter 2: Team ---
+selected_team = "All Teams"
+if not df_filtered.empty and "Team" in df_filtered.columns:
+    all_teams = sorted(df_filtered["Team"].unique().tolist())
+    team_options = ["All Teams"] + all_teams
+    selected_team = st.sidebar.selectbox("Select Team", team_options)
+    
+    if selected_team != "All Teams":
+        df_filtered = df_filtered[df_filtered["Team"] == selected_team]
+
 # ============================================================
 # 5. Main UI
 # ============================================================
@@ -108,9 +118,10 @@ with tab1:
         # --- Sort Controls ---
         c_sort1, c_sort2 = st.columns([1, 3])
         with c_sort1:
-            # Exclude Position from sort options
+            # Exclude Position and non-metric columns from sort options
+            exclude_sort = ["Position", "Team", "League", "Season", "MP"]
             # Available columns for sorting (intersection of desired order and actual columns)
-            available_cols = [c for c in column_order if c in df_filtered.columns and c != "Position"]
+            available_cols = [c for c in column_order if c in df_filtered.columns and c not in exclude_sort]
             
             # Default to PPG if available
             default_idx = available_cols.index("PPG") if "PPG" in available_cols else 0
