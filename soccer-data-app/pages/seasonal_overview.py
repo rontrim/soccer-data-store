@@ -137,7 +137,16 @@ shared_column_config = {
     ),
     "xGD L": st.column_config.NumberColumn(
         "xGD L", help="Games with less than -0.5 xGD"
-    )
+    ),
+    # --- Per Game Formatting (Display 1 decimal, keep precision for plots) ---
+    "PPG": st.column_config.NumberColumn("PPG", format="%.1f"),
+    "xGD PPG": st.column_config.NumberColumn("xGD PPG", format="%.1f"),
+    "G PG": st.column_config.NumberColumn("G PG", format="%.1f"),
+    "GA PG": st.column_config.NumberColumn("GA PG", format="%.1f"),
+    "GD PG": st.column_config.NumberColumn("GD PG", format="%.1f"),
+    "xG PG": st.column_config.NumberColumn("xG PG", format="%.1f"),
+    "xGA PG": st.column_config.NumberColumn("xGA PG", format="%.1f"),
+    "xGD PG": st.column_config.NumberColumn("xGD PG", format="%.1f")
 }
 
 # Desired column order
