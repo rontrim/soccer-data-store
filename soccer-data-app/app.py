@@ -8,8 +8,8 @@ st.set_page_config(
 )
 
 # Define Pages
-seasonal_page = st.Page("seasonal_overview.py", title="Seasonal Overview", icon="")
-historic_page = st.Page("pages/Historic_Overview.py", title="Historic Overview", icon="")
+seasonal_page = st.Page("pages/seasonal_overview.py", title="Seasonal Overview", icon="⚽")
+historic_page = st.Page("pages/Historic_Overview.py", title="Historic Overview", icon="⏳")
 
 # Navigation
 pg = st.navigation([seasonal_page, historic_page])
