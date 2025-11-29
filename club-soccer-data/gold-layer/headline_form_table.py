@@ -52,15 +52,15 @@ def apply_transformations_and_ratios(df):
             F.regexp_replace(F.col("league"), r"^.*-", "")
         )
         
-        # --- Per Game Calculations (Rounded to 1 decimal) ---
-        .withColumn("PPG", F.round(F.col("Points") / F.col("MP"), 1))
-        .withColumn("xGD_PPG", F.round(F.col("xGD_Points") / F.col("MP"), 1))
-        .withColumn("G_PG", F.round(F.col("G") / F.col("MP"), 1))
-        .withColumn("GA_PG", F.round(F.col("GA") / F.col("MP"), 1))
-        .withColumn("GD_PG", F.round(F.col("GD") / F.col("MP"), 1))
-        .withColumn("xG_PG", F.round(F.col("xG") / F.col("MP"), 1))
-        .withColumn("xGA_PG", F.round(F.col("xGA") / F.col("MP"), 1))
-        .withColumn("xGD_PG", F.round(F.col("xGD") / F.col("MP"), 1))
+        # --- Per Game Calculations (No Rounding for Precision) ---
+        .withColumn("PPG", F.col("Points") / F.col("MP"))
+        .withColumn("xGD_PPG", F.col("xGD_Points") / F.col("MP"))
+        .withColumn("G_PG", F.col("G") / F.col("MP"))
+        .withColumn("GA_PG", F.col("GA") / F.col("MP"))
+        .withColumn("GD_PG", F.col("GD") / F.col("MP"))
+        .withColumn("xG_PG", F.col("xG") / F.col("MP"))
+        .withColumn("xGA_PG", F.col("xGA") / F.col("MP"))
+        .withColumn("xGD_PG", F.col("xGD") / F.col("MP"))
         
         # --- Final Rename ---
         # Rename keys to Title Case (safe operation now that transforms are done)
