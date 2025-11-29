@@ -7,11 +7,8 @@ import os
 # ============================================================
 # 1. App Configuration
 # ============================================================
-st.set_page_config(
-    page_title="Big 5 Leagues Club Historic Overview",
-    page_icon="⚽", 
-    layout="wide"
-)
+# Page config is now handled in app.py
+
 st.title("⚽ Big 5 Leagues Club Historic Overview")
 
 # ============================================================
