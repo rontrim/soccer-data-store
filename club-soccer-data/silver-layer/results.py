@@ -44,10 +44,25 @@ def bronze_standard_cleaned():
     # # limit to test season
     # df = df.filter(F.col("season") == TEST_SEASON)
 
+    # Extract result_id from match_report URL
+    # Primary: extract from URL pattern /en/matches/{id}/
+    # Fallback: generate from date-team-opponent when URL extraction fails
+    result_id_from_url = F.regexp_extract(F.col("match_report"), r"/en/matches/([^/]+)/", 1)
+    result_id_fallback = F.concat(
+        F.coalesce(F.col("date"), F.lit("unknown")), 
+        F.lit("-"), 
+        F.coalesce(F.col("team"), F.lit("unknown")), 
+        F.lit("-vs-"), 
+        F.coalesce(F.col("opponent"), F.lit("unknown"))
+    )
+    
     # add key ids used downstream
     df = (
         df
-        .withColumn("result_id", F.regexp_extract(F.col("match_report"), r"/en/matches/([^/]+)/", 1))
+        .withColumn("result_id", 
+            F.when((result_id_from_url == "") | F.isnull(result_id_from_url), result_id_fallback)
+            .otherwise(result_id_from_url)
+        )
         .withColumn("team_id", F.concat(F.col("team"), F.lit("-"), F.col("season")))
         .withColumn("result_team_id", F.concat(F.col("result_id"), F.lit("-"), F.col("team"), F.lit("-"), F.col("season")))
     )
@@ -80,6 +95,7 @@ def results_standard_filtered():
         .filter(F.col("league").isNotNull())
         .filter(F.col("season").isNotNull())
         .filter(F.col("result_team_id").isNotNull())
+        .filter(F.col("result_id").isNotNull() & (F.col("result_id") != ""))
     )
 
 dlt.create_streaming_table(
