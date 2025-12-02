@@ -41,6 +41,12 @@ def bronze_standard_cleaned():
     df = dlt.read_stream(BRONZE_STANDARD)
     df = sanitize_columns(df)
 
+    # Recover missing data from _rescued_data if available
+    # Example rescued data: {"season":2526,"GF":1,"GA":1,"_file_path":"..."}
+    df = df.withColumn("season", F.coalesce(F.col("season"), F.get_json_object(F.col("_rescued_data"), "$.season")))
+    df = df.withColumn("gf", F.coalesce(F.col("gf"), F.get_json_object(F.col("_rescued_data"), "$.GF")))
+    df = df.withColumn("ga", F.coalesce(F.col("ga"), F.get_json_object(F.col("_rescued_data"), "$.GA")))
+
     # # limit to test season
     # df = df.filter(F.col("season") == TEST_SEASON)
 

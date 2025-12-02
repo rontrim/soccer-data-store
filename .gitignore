@@ -5,3 +5,6 @@ __pycache__/
 .databricks
 # Streamlit secrets
 **/secrets.toml
+
+# Debugging
+debugging/
