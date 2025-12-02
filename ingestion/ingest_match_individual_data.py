@@ -24,7 +24,7 @@ for season in seasons:
     try:
         # 1. Fetch data for only the current season
         print(f"Fetching shot events for season {season}...")
-        fbref_single_season = sd.FBref(leagues=leagues, seasons=season, no_cache=True)
+        fbref_single_season = sd.FBref(leagues=leagues, seasons=season)
         df_shots = fbref_single_season.read_shot_events()
         
         if df_shots.empty:
