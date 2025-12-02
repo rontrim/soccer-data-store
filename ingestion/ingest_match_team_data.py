@@ -16,7 +16,8 @@ credential = DefaultAzureCredential()
 print("Fetching team match stats from Understat...")
 understat = sd.Understat(
     leagues=['ENG-Premier League', 'ESP-La Liga', 'FRA-Ligue 1', 'GER-Bundesliga', 'ITA-Serie A'], 
-    seasons=['2526']
+    seasons=['2526'],
+    no_cache=True
 )
 
 understat_team_match_stats = understat.read_team_match_stats()
@@ -67,7 +68,8 @@ stat_types = [
 seasons = ['2526']  # 2025/2026 season
 fbref = sd.FBref(
     leagues=['ENG-Premier League', 'ESP-La Liga', 'FRA-Ligue 1', 'GER-Bundesliga', 'ITA-Serie A'],
-    seasons=seasons
+    seasons=seasons,
+    no_cache=True
 )
 
 ingestion_date_str = pd.Timestamp.now().strftime('%Y-%m-%d')

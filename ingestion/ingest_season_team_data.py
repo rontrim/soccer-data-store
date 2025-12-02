@@ -20,7 +20,8 @@ stat_types = [
 
 fbref = sd.FBref(
     leagues=['ENG-Premier League', 'ESP-La Liga', 'FRA-Ligue 1', 'GER-Bundesliga', 'ITA-Serie A'],
-    seasons='2526'  # 2025/2026 season
+    seasons='2526',  # 2025/2026 season
+    no_cache=True
 )
 
 ingestion_date_str = pd.Timestamp.now().strftime('%Y-%m-%d')
