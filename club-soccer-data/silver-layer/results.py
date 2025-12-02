@@ -60,7 +60,7 @@ def bronze_standard_cleaned():
     df = (
         df
         .withColumn("result_id", 
-            F.when((result_id_from_url == "") | result_id_from_url.isNull(), result_id_fallback)
+            F.when((result_id_from_url == "") | F.isnull(result_id_from_url), result_id_fallback)
             .otherwise(result_id_from_url)
         )
         .withColumn("team_id", F.concat(F.col("team"), F.lit("-"), F.col("season")))
