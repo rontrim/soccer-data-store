@@ -616,7 +616,7 @@ if not df_results.empty:
     # This ensures the teams in the dropdown match the teams in the tables above
     df_chart_source = df_results.copy()
     
-    if selected_league:
+    if selected_league is not None:
         df_chart_source = df_chart_source[df_chart_source["League"] == selected_league]
 
     # 2. Get the list of available teams from this FILTERED dataframe
