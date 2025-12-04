@@ -3,7 +3,7 @@ from databricks import sql
 import pandas as pd
 
 @st.cache_data(ttl=3600)
-def get_data(table_name):
+def get_data(table_name, schema="analyze"):
     """
     Fetches data from Databricks SQL Warehouse.
     Cached for 1 hour.
@@ -27,7 +27,7 @@ def get_data(table_name):
             access_token=token
         ) as connection:
             
-            query = f"SELECT * FROM soccer_data.analyze.{table_name}"
+            query = f"SELECT * FROM soccer_data.{schema}.{table_name}"
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 result = cursor.fetchall()

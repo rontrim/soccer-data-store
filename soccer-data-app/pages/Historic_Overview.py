@@ -255,3 +255,109 @@ with tab1:
 
     else:
         st.info("No data found for the selected filters.")
+
+# ============================================================
+# 6. Rolling Average Chart
+# ============================================================
+st.markdown("---")
+st.subheader("📈 Team Form (8-Game Rolling Average)")
+
+# 1. Load Match Results Data (Silver Layer)
+with st.spinner("Loading match results..."):
+    df_results = get_data("results", schema="processed")
+
+# Pre-processing
+if not df_results.empty:
+    if "date" in df_results.columns:
+        df_results["date"] = pd.to_datetime(df_results["date"])
+    
+    # Capitalize columns
+    df_results.columns = [c.capitalize() for c in df_results.columns]
+
+    # Layout
+    col_filters, col_graph = st.columns([1, 3])
+
+    with col_filters:
+        st.markdown("### Filters")
+
+        numeric_cols = df_results.select_dtypes(include=['float', 'int']).columns.tolist()
+        numeric_cols = [c for c in numeric_cols if "id" not in c.lower()]
+
+        # --- Team Filters ---
+        if "Team" in df_results.columns:
+            team_options = sorted(df_results["Team"].unique())
+            team_1 = st.selectbox("Team 1", team_options, index=0, key="hist_roll_team_1")
+            team_2 = st.selectbox("Team 2", ["None"] + team_options, index=0, key="hist_roll_team_2")
+        else:
+            st.error("Team column not found.")
+            team_1, team_2 = None, None
+
+        # --- Season Filters (Historic Page Only) ---
+        if "Season" in df_results.columns:
+            season_options = sorted(df_results["Season"].unique(), reverse=True)
+            season_1 = st.selectbox("Season 1", season_options, key="hist_season_1")
+            season_2 = st.selectbox("Season 2", ["None"] + season_options, key="hist_season_2")
+        else:
+            season_1, season_2 = None, None
+
+        # --- Metric Filters ---
+        if numeric_cols:
+            default_idx = numeric_cols.index("Xg") if "Xg" in numeric_cols else 0
+            metric_1 = st.selectbox("Metric 1", numeric_cols, index=default_idx, key="hist_roll_metric_1")
+            metric_2 = st.selectbox("Metric 2", ["None"] + numeric_cols, index=0, key="hist_roll_metric_2")
+        else:
+            metric_1, metric_2 = None, None
+
+    with col_graph:
+        if team_1 and metric_1 and season_1:
+            # Logic to build the plot data
+            pairs = []
+            pairs.append({"team": team_1, "season": season_1})
+            
+            if team_2 != "None" and season_2 != "None":
+                pairs.append({"team": team_2, "season": season_2})
+            elif team_2 == "None" and season_2 != "None":
+                 # Compare same team across seasons
+                 pairs.append({"team": team_1, "season": season_2})
+            elif team_2 != "None" and season_2 == "None":
+                 # Compare two teams in same season (season 1)
+                 pairs.append({"team": team_2, "season": season_1})
+
+            metrics_to_plot = [m for m in [metric_1, metric_2] if m != "None"]
+
+            plot_data = pd.DataFrame()
+
+            for pair in pairs:
+                p_team = pair["team"]
+                p_season = pair["season"]
+                
+                # Get team data for specific season
+                team_df = df_results[(df_results["Team"] == p_team) & (df_results["Season"] == p_season)].copy()
+                team_df = team_df.sort_values("Date")
+                
+                # Reset index to have a sequential game number (1 to N) for x-axis comparison across seasons
+                team_df["Game Number"] = range(1, len(team_df) + 1)
+
+                # Calculate Rolling 8 Average
+                for metric in metrics_to_plot:
+                    col_name = f"{p_team} ({p_season}) - {metric}"
+                    team_df[col_name] = team_df[metric].rolling(window=8, min_periods=1).mean()
+
+                    # Keep Game Number and rolling metric
+                    temp_df = team_df[["Game Number", col_name]].set_index("Game Number")
+
+                    # Merge
+                    plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
+
+            if not plot_data.empty:
+                fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
+                            title=f"Rolling 8-Game Average Comparison",
+                            labels={"value": "Average Value", "Game Number": "Match Number (in Season)", "variable": "Legend"})
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No data found for the selected combination.")
+        else:
+            st.info("Please select at least one team, season, and metric.")
+
+else:
+    st.error("Could not load results data.")

@@ -597,3 +597,90 @@ with tab4:
 
     else:
         st.info("No combined form data found.")
+
+# ============================================================
+# 6. Rolling Average Chart
+# ============================================================
+st.markdown("---")
+st.subheader("📈 Team Form (8-Game Rolling Average)")
+
+# 1. Load Match Results Data (Silver Layer)
+# We fetch the whole table once to save on DB calls
+with st.spinner("Loading match results..."):
+    df_results = get_data("results", schema="processed")
+
+# Pre-processing (Ensure dates are datetime and sort)
+if not df_results.empty:
+    if "date" in df_results.columns:
+        df_results["date"] = pd.to_datetime(df_results["date"])
+    
+    # Capitalize columns for display
+    df_results.columns = [c.capitalize() for c in df_results.columns]
+
+    # Layout: Filters on Left (1 part), Graph on Right (3 parts)
+    col_filters, col_graph = st.columns([1, 3])
+
+    with col_filters:
+        st.markdown("### Filters")
+
+        # Get list of numeric metrics for plotting
+        numeric_cols = df_results.select_dtypes(include=['float', 'int']).columns.tolist()
+        # Exclude ID columns
+        numeric_cols = [c for c in numeric_cols if "id" not in c.lower()]
+
+        # --- Team Filters ---
+        if "Team" in df_results.columns:
+            team_options = sorted(df_results["Team"].unique())
+            team_1 = st.selectbox("Team 1", team_options, index=0, key="roll_team_1")
+            team_2 = st.selectbox("Team 2", ["None"] + team_options, index=0, key="roll_team_2")
+        else:
+            st.error("Team column not found.")
+            team_1, team_2 = None, None
+
+        # --- Metric Filters ---
+        if numeric_cols:
+            # Default to something interesting like Xg or Goals
+            default_idx = numeric_cols.index("Xg") if "Xg" in numeric_cols else 0
+            metric_1 = st.selectbox("Metric 1", numeric_cols, index=default_idx, key="roll_metric_1")
+            metric_2 = st.selectbox("Metric 2", ["None"] + numeric_cols, index=0, key="roll_metric_2")
+        else:
+            metric_1, metric_2 = None, None
+
+    with col_graph:
+        if team_1 and metric_1:
+            # Logic to build the plot data
+            teams_to_plot = [t for t in [team_1, team_2] if t != "None"]
+            metrics_to_plot = [m for m in [metric_1, metric_2] if m != "None"]
+
+            plot_data = pd.DataFrame()
+
+            for team in teams_to_plot:
+                # Get team data
+                team_df = df_results[df_results["Team"] == team].copy()
+                team_df = team_df.sort_values("Date")
+
+                # Calculate Rolling 8 Average for selected metrics
+                for metric in metrics_to_plot:
+                    # Create a smooth column name for the legend
+                    col_name = f"{team} - {metric}"
+                    # Calculation: Rolling mean
+                    team_df[col_name] = team_df[metric].rolling(window=8, min_periods=1).mean()
+
+                    # Keep only Date and the new rolling metric for plotting
+                    temp_df = team_df[["Date", col_name]].set_index("Date")
+
+                    # Merge into master plot dataframe
+                    plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
+
+            if not plot_data.empty:
+                fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
+                            title=f"Rolling 8-Game Average",
+                            labels={"value": "Average Value", "Date": "Match Date", "variable": "Legend"})
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Select a team and metric to visualize trends.")
+        else:
+            st.info("Please select at least one team and one metric.")
+
+else:
+    st.error("Could not load results data.")
