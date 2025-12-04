@@ -2,6 +2,7 @@ import streamlit as st
 from databricks import sql
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import os
 import sys
 
@@ -32,6 +33,8 @@ TABLE_FORM = "form_stats"
 with st.spinner("Loading stats..."):
     df_headline = get_data(TABLE_HEADLINE)
     df_form = get_data(TABLE_FORM)
+    # Load results data from processed schema for rolling average charts
+    df_results = get_data("results", schema="processed")
 
 # --- Transformation: Replace Underscores with Spaces ---
 if not df_headline.empty:
@@ -597,3 +600,121 @@ with tab4:
 
     else:
         st.info("No combined form data found.")
+
+# ============================================================
+# 6. Team Form Rolling Average Chart
+# ============================================================
+st.markdown("---")
+st.subheader("📈 Team Form (8-Game Rolling Average)")
+
+if not df_results.empty:
+    # Pre-process Date
+    if "Date" in df_results.columns:
+        df_results["Date"] = pd.to_datetime(df_results["Date"])
+
+    # 1. Filter the results dataframe based on the GLOBAL page filters
+    # This ensures the teams in the dropdown match the teams in the tables above
+    df_chart_source = df_results.copy()
+    
+    if selected_league:
+        df_chart_source = df_chart_source[df_chart_source["League"] == selected_league]
+
+    # 2. Get the list of available teams from this FILTERED dataframe
+    available_teams = sorted(df_chart_source["Team"].unique())
+    
+    if len(available_teams) > 0:
+        # 3. Layout
+        col_filters, col_graph = st.columns([1, 3])
+
+        with col_filters:
+            st.markdown("### Chart Filters")
+            numeric_cols = df_chart_source.select_dtypes(include=['float', 'int']).columns.tolist()
+
+            # Use the filtered 'available_teams' list here
+            team_1 = st.selectbox("Team 1", available_teams, index=0, key="roll_team_1")
+            team_2 = st.selectbox("Team 2", ["None"] + available_teams, index=0, key="roll_team_2")
+            
+            metric_1 = st.selectbox("Metric 1", numeric_cols, index=0, key="roll_metric_1")
+            metric_2 = st.selectbox("Metric 2", ["None"] + numeric_cols, index=0, key="roll_metric_2")
+
+        with col_graph:
+            # Prepare data for visualization
+            plot_data = pd.DataFrame()
+            
+            # Process Team 1
+            t1_df = df_chart_source[df_chart_source["Team"] == team_1].copy()
+            t1_df = t1_df.sort_values("Date")
+            
+            if len(t1_df) >= 8 and metric_1 in t1_df.columns:
+                t1_df[f"{metric_1}_rolling"] = t1_df[metric_1].rolling(window=8, min_periods=1).mean()
+                
+                fig = go.Figure()
+                
+                # Add Team 1 Metric 1
+                fig.add_trace(go.Scatter(
+                    x=t1_df["Date"],
+                    y=t1_df[f"{metric_1}_rolling"],
+                    mode='lines',
+                    name=f"{team_1} - {metric_1}",
+                    line=dict(width=2)
+                ))
+                
+                # Add Team 2 if selected
+                if team_2 != "None":
+                    t2_df = df_chart_source[df_chart_source["Team"] == team_2].copy()
+                    t2_df = t2_df.sort_values("Date")
+                    
+                    if len(t2_df) >= 8 and metric_1 in t2_df.columns:
+                        t2_df[f"{metric_1}_rolling"] = t2_df[metric_1].rolling(window=8, min_periods=1).mean()
+                        
+                        fig.add_trace(go.Scatter(
+                            x=t2_df["Date"],
+                            y=t2_df[f"{metric_1}_rolling"],
+                            mode='lines',
+                            name=f"{team_2} - {metric_1}",
+                            line=dict(width=2)
+                        ))
+                
+                # Add Metric 2 if selected
+                if metric_2 != "None":
+                    if metric_2 in t1_df.columns:
+                        t1_df[f"{metric_2}_rolling"] = t1_df[metric_2].rolling(window=8, min_periods=1).mean()
+                        
+                        fig.add_trace(go.Scatter(
+                            x=t1_df["Date"],
+                            y=t1_df[f"{metric_2}_rolling"],
+                            mode='lines',
+                            name=f"{team_1} - {metric_2}",
+                            line=dict(width=2, dash='dash')
+                        ))
+                    
+                    if team_2 != "None" and metric_2 in t2_df.columns:
+                        t2_df[f"{metric_2}_rolling"] = t2_df[metric_2].rolling(window=8, min_periods=1).mean()
+                        
+                        fig.add_trace(go.Scatter(
+                            x=t2_df["Date"],
+                            y=t2_df[f"{metric_2}_rolling"],
+                            mode='lines',
+                            name=f"{team_2} - {metric_2}",
+                            line=dict(width=2, dash='dash')
+                        ))
+                
+                fig.update_layout(
+                    title="8-Game Rolling Average",
+                    xaxis_title="Date",
+                    yaxis_title="Value",
+                    hovermode='x unified',
+                    plot_bgcolor='white',
+                    font=dict(color='black')
+                )
+                
+                fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+                fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+                
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info(f"Not enough data for {team_1} to calculate rolling average (minimum 8 games required).")
+    else:
+        st.info("No teams available for the selected league.")
+else:
+    st.info("No results data available for rolling average charts.")
