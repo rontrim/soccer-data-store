@@ -32,6 +32,8 @@ TABLE_FORM = "form_stats"
 with st.spinner("Loading stats..."):
     df_headline = get_data(TABLE_HEADLINE)
     df_form = get_data(TABLE_FORM)
+    # Load results data (Silver Layer) for the rolling average chart
+    df_results = get_data("results", schema="processed")
 
 # --- Transformation: Replace Underscores with Spaces ---
 if not df_headline.empty:
@@ -597,3 +599,114 @@ with tab4:
 
     else:
         st.info("No combined form data found.")
+
+# ============================================================
+# 6. Rolling Average Chart
+# ============================================================
+st.markdown("---")
+st.subheader("📈 Team Form (8-Game Rolling Average)")
+
+if not df_results.empty:
+    # Pre-process Date
+    if "Date" in df_results.columns:
+        df_results["Date"] = pd.to_datetime(df_results["Date"])
+
+    # 1. Filter the results dataframe based on the GLOBAL page filters
+    # This ensures the teams in the dropdown match the teams in the tables above
+    df_chart_source = df_results.copy()
+    
+    if selected_league:
+        df_chart_source = df_chart_source[df_chart_source["League"] == selected_league]
+    
+    # 2. Get the list of available teams from this FILTERED dataframe
+    available_teams = sorted(df_chart_source["Team"].unique())
+    
+    if len(available_teams) > 0:
+        # 3. Layout
+        col_filters, col_graph = st.columns([1, 3])
+
+        with col_filters:
+            st.markdown("### Chart Filters")
+            numeric_cols = df_chart_source.select_dtypes(include=['float', 'int']).columns.tolist()
+
+            # Use the filtered 'available_teams' list here
+            team_1 = st.selectbox("Team 1", available_teams, index=0, key="roll_team_1")
+            team_2 = st.selectbox("Team 2", ["None"] + available_teams, index=0, key="roll_team_2")
+            
+            metric_1 = st.selectbox("Metric 1", numeric_cols, index=0, key="roll_metric_1")
+            metric_2 = st.selectbox("Metric 2", ["None"] + numeric_cols, index=0, key="roll_metric_2")
+
+        with col_graph:
+            # Visualization logic
+            plot_data = pd.DataFrame()
+            
+            # Process Team 1
+            if team_1:
+                t1_df = df_chart_source[df_chart_source["Team"] == team_1].copy()
+                t1_df = t1_df.sort_values("Date")
+                
+                # Calculate 8-game rolling average
+                if metric_1 in t1_df.columns:
+                    t1_df[f"{metric_1}_Rolling"] = t1_df[metric_1].rolling(window=8, min_periods=1).mean()
+                    t1_df["Team_Metric"] = f"{team_1} - {metric_1}"
+                    plot_data = pd.concat([plot_data, t1_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"})])
+            
+            # Process Team 2 (if selected)
+            if team_2 != "None":
+                t2_df = df_chart_source[df_chart_source["Team"] == team_2].copy()
+                t2_df = t2_df.sort_values("Date")
+                
+                if metric_1 in t2_df.columns:
+                    t2_df[f"{metric_1}_Rolling"] = t2_df[metric_1].rolling(window=8, min_periods=1).mean()
+                    t2_df["Team_Metric"] = f"{team_2} - {metric_1}"
+                    plot_data = pd.concat([plot_data, t2_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"})])
+            
+            # Process Metric 2 for Team 1
+            if metric_2 != "None" and team_1:
+                t1_df = df_chart_source[df_chart_source["Team"] == team_1].copy()
+                t1_df = t1_df.sort_values("Date")
+                
+                if metric_2 in t1_df.columns:
+                    t1_df[f"{metric_2}_Rolling"] = t1_df[metric_2].rolling(window=8, min_periods=1).mean()
+                    t1_df["Team_Metric"] = f"{team_1} - {metric_2}"
+                    plot_data = pd.concat([plot_data, t1_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"})])
+            
+            # Process Metric 2 for Team 2
+            if metric_2 != "None" and team_2 != "None":
+                t2_df = df_chart_source[df_chart_source["Team"] == team_2].copy()
+                t2_df = t2_df.sort_values("Date")
+                
+                if metric_2 in t2_df.columns:
+                    t2_df[f"{metric_2}_Rolling"] = t2_df[metric_2].rolling(window=8, min_periods=1).mean()
+                    t2_df["Team_Metric"] = f"{team_2} - {metric_2}"
+                    plot_data = pd.concat([plot_data, t2_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"})])
+            
+            # Create the plot
+            if not plot_data.empty:
+                fig_rolling = px.line(
+                    plot_data,
+                    x="Date",
+                    y="Value",
+                    color="Team_Metric",
+                    title="8-Game Rolling Average",
+                    labels={"Value": "Metric Value", "Date": "Date"}
+                )
+                
+                fig_rolling.update_layout(
+                    xaxis_title="Date",
+                    yaxis_title="Metric Value",
+                    font=dict(color='black'),
+                    plot_bgcolor='white',
+                    legend_title="Team - Metric"
+                )
+                
+                fig_rolling.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+                fig_rolling.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+                
+                st.plotly_chart(fig_rolling, use_container_width=True)
+            else:
+                st.info("No data available for the selected filters.")
+    else:
+        st.info("No teams available for the selected league.")
+else:
+    st.info("No results data available.")
