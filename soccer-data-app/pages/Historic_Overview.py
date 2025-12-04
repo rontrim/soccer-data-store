@@ -298,7 +298,7 @@ if not df_results.empty:
 
         with col_graph:
             # Visualization Logic
-            plot_data = pd.DataFrame()
+            plot_data_list = []
             
             # Process Team 1 / Season 1
             if team_1 and season_1:
@@ -309,7 +309,7 @@ if not df_results.empty:
                 if metric_1 in t1_df.columns and len(t1_df) > 0:
                     t1_df[f"{metric_1}_Rolling"] = t1_df[metric_1].rolling(window=8, min_periods=1).mean()
                     t1_df["Team_Metric"] = f"{team_1} ({season_1}) - {metric_1}"
-                    plot_data = pd.concat([plot_data, t1_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"})])
+                    plot_data_list.append(t1_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"}))
             
             # Process Team 2 / Season 2 (if selected)
             if team_2 != "None" and season_2 != "None":
@@ -319,7 +319,7 @@ if not df_results.empty:
                 if metric_1 in t2_df.columns and len(t2_df) > 0:
                     t2_df[f"{metric_1}_Rolling"] = t2_df[metric_1].rolling(window=8, min_periods=1).mean()
                     t2_df["Team_Metric"] = f"{team_2} ({season_2}) - {metric_1}"
-                    plot_data = pd.concat([plot_data, t2_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"})])
+                    plot_data_list.append(t2_df[["Date", f"{metric_1}_Rolling", "Team_Metric"]].rename(columns={f"{metric_1}_Rolling": "Value"}))
             
             # Process Metric 2 for Team 1 / Season 1
             if metric_2 != "None" and team_1 and season_1:
@@ -329,7 +329,7 @@ if not df_results.empty:
                 if metric_2 in t1_df.columns and len(t1_df) > 0:
                     t1_df[f"{metric_2}_Rolling"] = t1_df[metric_2].rolling(window=8, min_periods=1).mean()
                     t1_df["Team_Metric"] = f"{team_1} ({season_1}) - {metric_2}"
-                    plot_data = pd.concat([plot_data, t1_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"})])
+                    plot_data_list.append(t1_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"}))
             
             # Process Metric 2 for Team 2 / Season 2
             if metric_2 != "None" and team_2 != "None" and season_2 != "None":
@@ -339,10 +339,11 @@ if not df_results.empty:
                 if metric_2 in t2_df.columns and len(t2_df) > 0:
                     t2_df[f"{metric_2}_Rolling"] = t2_df[metric_2].rolling(window=8, min_periods=1).mean()
                     t2_df["Team_Metric"] = f"{team_2} ({season_2}) - {metric_2}"
-                    plot_data = pd.concat([plot_data, t2_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"})])
+                    plot_data_list.append(t2_df[["Date", f"{metric_2}_Rolling", "Team_Metric"]].rename(columns={f"{metric_2}_Rolling": "Value"}))
             
             # Create the plot
-            if not plot_data.empty:
+            if plot_data_list:
+                plot_data = pd.concat(plot_data_list, ignore_index=True)
                 fig_rolling = px.line(
                     plot_data,
                     x="Date",
