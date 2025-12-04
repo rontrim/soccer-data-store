@@ -658,46 +658,56 @@ if not df_results.empty:
             raw_metric_1 = metric_map.get(metric_1)
             raw_metric_2 = metric_map.get(metric_2) if metric_2 != "None" else None
 
-            plot_data = pd.DataFrame()
-
-            for team_name in [team_1, team_2]:
-                if team_name == "None": 
-                    continue
-                
-                # Filter for Team
-                team_df = df_results[df_results["Team"] == team_name].copy()
-                team_df = team_df.sort_values("Date")
-                
-                # --- Key Calculation Step ---
-                # We use a rolling window of 8
-                raw_metrics_to_calc = [m for m in [raw_metric_1, raw_metric_2] if m]
-                
-                for raw_col in raw_metrics_to_calc:
-                    # 1. Calculate Rolling Sum of the stat (e.g., Total Goals in last 8 games)
-                    rolling_sum = team_df[raw_col].rolling(window=8, min_periods=1).sum()
-                    
-                    # 2. Calculate Rolling Count of matches (Matches Played in window)
-                    # usually 8, but allows for partial windows at start of season
-                    rolling_count = team_df[raw_col].rolling(window=8, min_periods=1).count()
-                    
-                    # 3. Calculate the PG metric
-                    # This matches the logic: Sum(Stat) / Count(Games)
-                    pg_metric_name = [k for k, v in metric_map.items() if v == raw_col][0]
-                    legend_name = f"{team_name} - {pg_metric_name}"
-                    
-                    team_df[legend_name] = rolling_sum / rolling_count
-                    
-                    # Merge for plotting
-                    temp_df = team_df[["Date", legend_name]].set_index("Date")
-                    plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
-
-            if not plot_data.empty:
-                fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
-                            title=f"Rolling 8-Game Average (Per Game)",
-                            labels={"value": "Per Game Average", "Date": "Match Date", "variable": "Legend"})
-                st.plotly_chart(fig, use_container_width=True)
+            # Validate that raw columns exist in df_results
+            raw_metrics_to_calc = [m for m in [raw_metric_1, raw_metric_2] if m]
+            missing_cols = [col for col in raw_metrics_to_calc if col not in df_results.columns]
+            
+            if missing_cols:
+                st.error(f"Missing required columns in data: {', '.join(missing_cols)}")
             else:
-                st.info("Select a team and metric to visualize trends.")
+                plot_data = pd.DataFrame()
+
+                for team_name in [team_1, team_2]:
+                    if team_name == "None": 
+                        continue
+                    
+                    # Filter for Team
+                    team_df = df_results[df_results["Team"] == team_name].copy()
+                    team_df = team_df.sort_values("Date")
+                    
+                    # --- Key Calculation Step ---
+                    # We use a rolling window of 8
+                    
+                    for raw_col in raw_metrics_to_calc:
+                        # 1. Calculate Rolling Sum of the stat (e.g., Total Goals in last 8 games)
+                        rolling_sum = team_df[raw_col].rolling(window=8, min_periods=1).sum()
+                        
+                        # 2. Calculate Rolling Count of matches (Matches Played in window)
+                        # usually 8, but allows for partial windows at start of season
+                        rolling_count = team_df[raw_col].rolling(window=8, min_periods=1).count()
+                        
+                        # 3. Calculate the PG metric
+                        # This matches the logic: Sum(Stat) / Count(Games)
+                        # Handle division by zero by replacing 0 count with NaN
+                        pg_metric_name = next((k for k, v in metric_map.items() if v == raw_col), None)
+                        if pg_metric_name is None:
+                            continue
+                            
+                        legend_name = f"{team_name} - {pg_metric_name}"
+                        
+                        team_df[legend_name] = rolling_sum / rolling_count.replace(0, pd.NA)
+                        
+                        # Merge for plotting
+                        temp_df = team_df[["Date", legend_name]].set_index("Date")
+                        plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
+
+                if not plot_data.empty:
+                    fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
+                                title=f"Rolling 8-Game Average (Per Game)",
+                                labels={"value": "Per Game Average", "Date": "Match Date", "variable": "Legend"})
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Select a team and metric to visualize trends.")
         else:
             st.info("Please select at least one team and one metric.")
 

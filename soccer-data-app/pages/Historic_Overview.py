@@ -323,64 +323,74 @@ if not df_results.empty:
             raw_metric_1 = metric_map.get(metric_1)
             raw_metric_2 = metric_map.get(metric_2) if metric_2 != "None" else None
             
-            # Logic to build the plot data
-            pairs = []
-            pairs.append({"team": team_1, "season": season_1})
+            # Validate that raw columns exist in df_results
+            raw_metrics_to_calc = [m for m in [raw_metric_1, raw_metric_2] if m]
+            missing_cols = [col for col in raw_metrics_to_calc if col not in df_results.columns]
             
-            if team_2 != "None" and season_2 != "None":
-                pairs.append({"team": team_2, "season": season_2})
-            elif team_2 == "None" and season_2 != "None":
-                 # Compare same team across seasons
-                 pairs.append({"team": team_1, "season": season_2})
-            elif team_2 != "None" and season_2 == "None":
-                 # Compare two teams in same season (season 1)
-                 pairs.append({"team": team_2, "season": season_1})
-
-            plot_data = pd.DataFrame()
-
-            for pair in pairs:
-                p_team = pair["team"]
-                p_season = pair["season"]
-                
-                # Get team data for specific season
-                team_df = df_results[(df_results["Team"] == p_team) & (df_results["Season"] == p_season)].copy()
-                team_df = team_df.sort_values("Date")
-                
-                # Reset index to have a sequential game number (1 to N) for x-axis comparison across seasons
-                team_df["Game Number"] = range(1, len(team_df) + 1)
-
-                # --- Key Calculation Step ---
-                # We use a rolling window of 8
-                raw_metrics_to_calc = [m for m in [raw_metric_1, raw_metric_2] if m]
-                
-                for raw_col in raw_metrics_to_calc:
-                    # 1. Calculate Rolling Sum of the stat (e.g., Total Goals in last 8 games)
-                    rolling_sum = team_df[raw_col].rolling(window=8, min_periods=1).sum()
-                    
-                    # 2. Calculate Rolling Count of matches (Matches Played in window)
-                    # usually 8, but allows for partial windows at start of season
-                    rolling_count = team_df[raw_col].rolling(window=8, min_periods=1).count()
-                    
-                    # 3. Calculate the PG metric
-                    # This matches the logic: Sum(Stat) / Count(Games)
-                    pg_metric_name = [k for k, v in metric_map.items() if v == raw_col][0]
-                    col_name = f"{p_team} ({p_season}) - {pg_metric_name}"
-                    
-                    team_df[col_name] = rolling_sum / rolling_count
-
-                    # Keep Game Number and rolling metric
-                    temp_df = team_df[["Game Number", col_name]].set_index("Game Number")
-
-                    # Merge
-                    plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
-
-            if not plot_data.empty:
-                fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
-                            title=f"Rolling 8-Game Average Comparison (Per Game)",
-                            labels={"value": "Per Game Average", "Game Number": "Match Number (in Season)", "variable": "Legend"})
-                st.plotly_chart(fig, use_container_width=True)
+            if missing_cols:
+                st.error(f"Missing required columns in data: {', '.join(missing_cols)}")
             else:
-                st.info("No data found for the selected combination.")
+                # Logic to build the plot data
+                pairs = []
+                pairs.append({"team": team_1, "season": season_1})
+                
+                if team_2 != "None" and season_2 != "None":
+                    pairs.append({"team": team_2, "season": season_2})
+                elif team_2 == "None" and season_2 != "None":
+                     # Compare same team across seasons
+                     pairs.append({"team": team_1, "season": season_2})
+                elif team_2 != "None" and season_2 == "None":
+                     # Compare two teams in same season (season 1)
+                     pairs.append({"team": team_2, "season": season_1})
+
+                plot_data = pd.DataFrame()
+
+                for pair in pairs:
+                    p_team = pair["team"]
+                    p_season = pair["season"]
+                    
+                    # Get team data for specific season
+                    team_df = df_results[(df_results["Team"] == p_team) & (df_results["Season"] == p_season)].copy()
+                    team_df = team_df.sort_values("Date")
+                    
+                    # Reset index to have a sequential game number (1 to N) for x-axis comparison across seasons
+                    team_df["Game Number"] = range(1, len(team_df) + 1)
+
+                    # --- Key Calculation Step ---
+                    # We use a rolling window of 8
+                    
+                    for raw_col in raw_metrics_to_calc:
+                        # 1. Calculate Rolling Sum of the stat (e.g., Total Goals in last 8 games)
+                        rolling_sum = team_df[raw_col].rolling(window=8, min_periods=1).sum()
+                        
+                        # 2. Calculate Rolling Count of matches (Matches Played in window)
+                        # usually 8, but allows for partial windows at start of season
+                        rolling_count = team_df[raw_col].rolling(window=8, min_periods=1).count()
+                        
+                        # 3. Calculate the PG metric
+                        # This matches the logic: Sum(Stat) / Count(Games)
+                        # Handle division by zero by replacing 0 count with NaN
+                        pg_metric_name = next((k for k, v in metric_map.items() if v == raw_col), None)
+                        if pg_metric_name is None:
+                            continue
+                            
+                        col_name = f"{p_team} ({p_season}) - {pg_metric_name}"
+                        
+                        team_df[col_name] = rolling_sum / rolling_count.replace(0, pd.NA)
+
+                        # Keep Game Number and rolling metric
+                        temp_df = team_df[["Game Number", col_name]].set_index("Game Number")
+
+                        # Merge
+                        plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
+
+                if not plot_data.empty:
+                    fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
+                                title=f"Rolling 8-Game Average Comparison (Per Game)",
+                                labels={"value": "Per Game Average", "Game Number": "Match Number (in Season)", "variable": "Legend"})
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No data found for the selected combination.")
         else:
             st.info("Please select at least one team, season, and metric.")
 
