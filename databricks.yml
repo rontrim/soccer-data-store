@@ -29,6 +29,7 @@ targets:
     mode: production
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
+      root_path: /Workspace/Users/rhe_29@hotmail.com/.bundle/${bundle.name}/${bundle.target}
     run_as:
       user_name: rhe_29@hotmail.com
     variables:
@@ -39,6 +40,7 @@ targets:
     mode: production
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
+      root_path: /Workspace/Users/rhe_29@hotmail.com/.bundle/${bundle.name}/${bundle.target}
     run_as:
       user_name: rhe_29@hotmail.com 
     variables:
