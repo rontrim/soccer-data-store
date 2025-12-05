@@ -8,8 +8,9 @@ A comprehensive data pipeline and analytics application for Big 5 European socce
 
 ## ✨ Key Features
 
-- **Multi-League Analytics**: Compare teams across the Big 5 leagues.
-- **Interactive Dashboard**: Built with Streamlit for real-time data exploration with dynamic filtering by league and season.
+- **Multi-League Analytics**: Compare teams across the Big 5 leagues, with options to view individual leagues or a combined view of all teams.
+- **Historical Analysis**: Explore team performance trends across multiple seasons.
+- **Interactive Dashboard**: Multipage Streamlit app for real-time data exploration with dynamic filtering by league, season, and team.
 - **Advanced Metrics**: Includes expected goals differential (xGD), possession stats, and performance indicators (xG, xGA, PPG).
 - **Customizable Performance Plots**: Interactive scatter plots with user-selectable axes for deep performance analysis.
 - **Quartile Analysis**: Visual color-coding of teams based on performance quartiles (Q1-Q4) for selected metrics.
@@ -18,18 +19,23 @@ A comprehensive data pipeline and analytics application for Big 5 European socce
 
 ## 📊 Dashboard Overview
 
-The application provides two main views, each equipped with data tables and analytical visualizations:
+The application is structured into two main pages, each equipped with data tables and analytical visualizations:
 
-1.  **League Table**:
-    -   Live season standings sorted by points.
-    -   Visual indicators for **Possession %** and **xGD breakdown** (Wins/Draws/Losses).
-    -   **League Performance Analysis**: A customizable scatter plot allowing users to correlate any two metrics (e.g., xG vs. Goals). It features:
-        -   **Quartile Coloring**: Teams are color-coded from light to dark green based on a third metric (e.g., Points).
-        -   **Median Lines**: Dashed lines indicating the league median for both axes to benchmark performance.
+### 1. Seasonal Overview
+Focuses on the current season's performance with four distinct views:
+-   **League Table**: Live season standings for a specific league.
+-   **Form Table**: Performance over the last 8 games for a specific league.
+-   **Combined Tables**: Cross-league comparison tables (League & Form) allowing you to rank all teams from the Big 5 leagues against each other.
 
-2.  **Form Table (Last 8 Games)**:
-    -   A focused view on recent performance.
-    -   **Form Analysis**: Similar to the league view, this includes a customizable scatter plot to visualize current form trends using the same quartile and median benchmarking tools.
+**Visual Analysis Features:**
+-   **Performance Scatter Plots**: Customizable plots on every tab allowing correlation of any two metrics (e.g., xG vs. Goals).
+-   **Quartile Coloring**: Teams are color-coded (Q1-Q4) based on a selected third metric (e.g., Points).
+-   **Median Benchmarks**: Dashed lines indicate the median performance for the selected group.
+
+### 2. Historic Overview
+Allows users to explore data from previous seasons.
+-   **Deep Dive**: Analyze how team stats have evolved over time.
+-   **Team Filtering**: Filter by specific teams to isolate their historical performance.
 
 ## 🏗️ How It Works (The Data Journey)
 
