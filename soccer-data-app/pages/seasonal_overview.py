@@ -327,7 +327,7 @@ with tab1:
             fig.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, width='stretch', key="scatter_tab1")
             
         # --- Rolling Average Chart ---
         render_rolling_chart(df_rolling_filtered, df_headline_filtered["Team"].unique(), "tab1")
@@ -444,7 +444,7 @@ with tab2:
             fig_f.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_f.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_f, width='stretch')
+            st.plotly_chart(fig_f, width='stretch', key="scatter_tab2")
             
         # --- Rolling Average Chart ---
         render_rolling_chart(df_rolling_filtered, df_form_filtered["Team"].unique(), "tab2")
@@ -565,7 +565,7 @@ with tab3:
             fig_c.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_c.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_c, width='stretch')
+            st.plotly_chart(fig_c, width='stretch', key="scatter_tab3")
             
         # --- Rolling Average Chart ---
         render_rolling_chart(df_rolling_filtered, df_headline_combined["Team"].unique(), "tab3")
@@ -686,7 +686,7 @@ with tab4:
             fig_fc.add_vline(x=x_median, line_width=1, line_dash="dash", line_color="black")
             fig_fc.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
-            st.plotly_chart(fig_fc, width='stretch')
+            st.plotly_chart(fig_fc, width='stretch', key="scatter_tab4")
             
         # --- Rolling Average Chart ---
         render_rolling_chart(df_rolling_filtered, df_form_combined["Team"].unique(), "tab4")
