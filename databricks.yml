@@ -15,8 +15,10 @@ targets:
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
 
-  ## Optionally, there could be 'staging' or 'prod' targets here.
-  #
-  # prod:
-  #   workspace:
-  #     host: https://adb-3647422366695414.14.azuredatabricks.net
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-3647422366695414.14.azuredatabricks.net
+    run_as:
+      # This runs the job as the user deploying it, or you can specify a service principal
+      user_name: rhetrim@gmail.com

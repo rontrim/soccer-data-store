@@ -39,3 +39,5 @@ resources:
         # List all your Gold aggregation scripts
         - file:
             path: ../club-soccer-data/gold-layer/headline_form_table.py
+        - file:
+            path: ../club-soccer-data/gold-layer/trendline_tables.py
