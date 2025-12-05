@@ -19,10 +19,14 @@ resources:
         # Task 1: Check for new data (Python Script)
         # ----------------------------------------------------------------
         - task_key: New_matches_check
-          job_cluster_key: club_soccer_ingestion # Assigned to the cluster defined below
+          # job_cluster_key: club_soccer_ingestion  <-- Removed to enable Serverless Compute
           spark_python_task:
             # UPDATED: Relative path to the file in your repo
             python_file: ../club-soccer-data/bronze-layer/recent_matches_check.py
+            # Note: Since Serverless doesn't support spark_conf, if your script needs the path,
+            # you should pass it as a parameter here instead:
+            # parameters:
+            #   - "/mnt/soccerdatastore/extract"
           environment_key: Default
 
         # ----------------------------------------------------------------
@@ -73,23 +77,91 @@ resources:
       # ----------------------------------------------------------------
       # Cluster Definition
       # ----------------------------------------------------------------
-      job_clusters:
-        - job_cluster_key: club_soccer_ingestion
-          new_cluster:
-            spark_version: 16.4.x-scala2.12
-            spark_conf:
-              soccer.datastore.extract: /mnt/soccerdatastore/extract
-              spark.sql.parquet.vectorized.reader.enabled: "false"
-            azure_attributes:
-              first_on_demand: 1
-              availability: SPOT_WITH_FALLBACK_AZURE
-              spot_bid_max_price: -1
-            node_type_id: Standard_D4ds_v4
-            spark_env_vars:
-              PYSPARK_PYTHON: /databricks/python3/bin/python3
-            data_security_mode: DATA_SECURITY_MODE_DEDICATED
-            runtime_engine: PHOTON
-            num_workers: 1
+      # job_clusters section removed entirely to default to Serverless
+
+      environments:
+        - environment_key: Default
+# filepath: c:\Users\rhe_2\OneDrive\Coding\Projects\soccer_data_pipeline\soccer-data-store\resources\club_soccer_data_pipeline.yml
+resources:
+  jobs:
+    Club_Soccer_Data_Processing:
+      name: Club Soccer Data Processing
+      
+      email_notifications:
+        on_success:
+          - rhetrim@gmail.com
+        on_failure:
+          - rhetrim@gmail.com
+      
+      schedule:
+        quartz_cron_expression: 30 0 21 ? * Tue
+        timezone_id: America/New_York
+        pause_status: UNPAUSED
+      
+      tasks:
+        # ----------------------------------------------------------------
+        # Task 1: Check for new data (Python Script)
+        # ----------------------------------------------------------------
+        - task_key: New_matches_check
+          # job_cluster_key: club_soccer_ingestion  <-- Removed to enable Serverless Compute
+          spark_python_task:
+            # UPDATED: Relative path to the file in your repo
+            python_file: ../club-soccer-data/bronze-layer/recent_matches_check.py
+            # Note: Since Serverless doesn't support spark_conf, if your script needs the path,
+            # you should pass it as a parameter here instead:
+            # parameters:
+            #   - "/mnt/soccerdatastore/extract"
+          environment_key: Default
+
+        # ----------------------------------------------------------------
+        # Task 2: Decision Logic (If new data > 0)
+        # ----------------------------------------------------------------
+        - task_key: New_matches_confirmation
+          depends_on:
+            - task_key: New_matches_check
+          condition_task:
+            op: GREATER_THAN
+            left: "{{tasks.New_matches_check.values.row_count}}"
+            right: "0"
+
+        # ----------------------------------------------------------------
+        # Task 3: Ingest (Bronze Pipeline)
+        # ----------------------------------------------------------------
+        - task_key: ingest_club_soccer_data
+          depends_on:
+            - task_key: New_matches_confirmation
+              outcome: "true"
+          pipeline_task:
+            # UPDATED: dynamic reference to your Bronze pipeline resource
+            pipeline_id: ${resources.pipelines.soccer_bronze_pipeline.id}
+            full_refresh: false
+
+        # ----------------------------------------------------------------
+        # Task 4: Clean (Silver Pipeline)
+        # ----------------------------------------------------------------
+        - task_key: clean_club_soccer_data
+          depends_on:
+            - task_key: ingest_club_soccer_data
+          pipeline_task:
+            # UPDATED: dynamic reference to your Silver pipeline resource
+            pipeline_id: ${resources.pipelines.soccer_silver_pipeline.id}
+            full_refresh: false
+
+        # ----------------------------------------------------------------
+        # Task 5: Analyze (Gold Pipeline)
+        # ----------------------------------------------------------------
+        - task_key: analyze_club_soccer_data
+          depends_on:
+            - task_key: clean_club_soccer_data
+          pipeline_task:
+            # UPDATED: dynamic reference to your Gold pipeline resource
+            pipeline_id: ${resources.pipelines.soccer_gold_pipeline.id}
+            full_refresh: false
+
+      # ----------------------------------------------------------------
+      # Cluster Definition
+      # ----------------------------------------------------------------
+      # job_clusters section removed entirely to default to Serverless
 
       environments:
         - environment_key: Default
