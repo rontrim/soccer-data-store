@@ -24,6 +24,7 @@ CATALOG = "soccer_data"
 SCHEMA = "analyze"
 TABLE_HEADLINE = "headline_stats"
 TABLE_FORM = "form_stats"
+TABLE_ROLLING = "rolling_stats"
 
 
 # ============================================================
@@ -32,6 +33,7 @@ TABLE_FORM = "form_stats"
 with st.spinner("Loading stats..."):
     df_headline = get_data(TABLE_HEADLINE)
     df_form = get_data(TABLE_FORM)
+    df_rolling = get_data(TABLE_ROLLING)
 
 # --- Transformation: Replace Underscores with Spaces ---
 if not df_headline.empty:
@@ -46,6 +48,9 @@ if not df_form.empty:
     if "team code understat" in df_form.columns:
         df_form = df_form.rename(columns={"team code understat": "Team_Abbreviation"})
 
+if not df_rolling.empty:
+    df_rolling.columns = [c.replace("_", " ") for c in df_rolling.columns]
+
 # ============================================================
 # 4. Filters
 # ============================================================
@@ -54,27 +59,32 @@ st.sidebar.title("Filters")
 # Initializing filtered DataFrames
 df_headline_filtered = df_headline.copy() if not df_headline.empty else pd.DataFrame()
 df_form_filtered = df_form.copy() if not df_form.empty else pd.DataFrame()
+df_rolling_filtered = df_rolling.copy() if not df_rolling.empty else pd.DataFrame()
 
-# --- Filter 1: League (Applies to BOTH tables) ---
+# --- Filter 1: League (Applies to ALL tables) ---
 selected_league = None
 if not df_headline.empty and "League" in df_headline.columns:
     all_leagues = sorted(df_headline["League"].unique().tolist())
     selected_league = st.sidebar.selectbox("Select League", all_leagues)
     
-    # Apply to both
+    # Apply to all
     df_headline_filtered = df_headline_filtered[df_headline_filtered["League"] == selected_league]
     if not df_form_filtered.empty and "League" in df_form_filtered.columns:
         df_form_filtered = df_form_filtered[df_form_filtered["League"] == selected_league]
+    if not df_rolling_filtered.empty and "League" in df_rolling_filtered.columns:
+        df_rolling_filtered = df_rolling_filtered[df_rolling_filtered["League"] == selected_league]
 
-# --- Filter 2: Season (Applies to LEAGUE TABLE only) ---
+# --- Filter 2: Season (Applies to LEAGUE & ROLLING tables) ---
 selected_season = None
 if not df_headline.empty and "Season" in df_headline.columns:
     # Sort seasons descending so the newest is first
     all_seasons = sorted(df_headline["Season"].unique().tolist(), reverse=True)
     selected_season = st.sidebar.selectbox("Select Season", all_seasons)
     
-    # Apply ONLY to headline stats
+    # Apply to headline and rolling stats
     df_headline_filtered = df_headline_filtered[df_headline_filtered["Season"] == selected_season]
+    if not df_rolling_filtered.empty and "Season" in df_rolling_filtered.columns:
+        df_rolling_filtered = df_rolling_filtered[df_rolling_filtered["Season"] == selected_season]
 
 # Create Combined DataFrames (All Leagues, Selected Season)
 df_headline_combined = df_headline.copy() if not df_headline.empty else pd.DataFrame()
@@ -87,7 +97,81 @@ if selected_season:
         df_form_combined = df_form_combined[df_form_combined["Season"] == selected_season]
 
 # ============================================================
-# 5. Main UI Tabs
+# 5. Helper Functions
+# ============================================================
+def render_rolling_chart(df_rolling, available_teams, key_suffix):
+    st.markdown("---")
+    st.subheader("📈 Team Form (8-Game Rolling Average)")
+    
+    if df_rolling.empty:
+        st.info("No rolling average data available.")
+        return
+
+    # Filter df_rolling to only include available teams
+    df_chart_data = df_rolling[df_rolling["Team"].isin(available_teams)]
+    
+    if df_chart_data.empty:
+        st.info("No data available for the teams in this view.")
+        return
+
+    # Get Metrics (Numeric columns excluding metadata)
+    exclude_cols = ["Team", "Season", "League", "Date", "Match_No"]
+    metrics = [c for c in df_chart_data.columns if c not in exclude_cols]
+    
+    # Layout: Filters (Left) | Graph (Right)
+    c_filters, c_graph = st.columns([1, 3])
+    
+    with c_filters:
+        st.markdown("### Filters")
+        
+        # Team 1
+        team1 = st.selectbox("Team 1", sorted(available_teams), key=f"t1_{key_suffix}")
+        # Metric 1
+        default_m1 = metrics.index("PPG") if "PPG" in metrics else 0
+        metric1 = st.selectbox("Metric 1", metrics, index=default_m1, key=f"m1_{key_suffix}")
+        
+        st.divider()
+        
+        # Team 2
+        team2 = st.selectbox("Team 2", ["None"] + sorted(available_teams), index=0, key=f"t2_{key_suffix}")
+        # Metric 2
+        default_m2 = metrics.index("xGD PPG") if "xGD PPG" in metrics else 0
+        metric2 = st.selectbox("Metric 2", ["None"] + metrics, index=default_m2 + 1, key=f"m2_{key_suffix}")
+
+    with c_graph:
+        import plotly.graph_objects as go
+        fig = go.Figure()
+        
+        # Trace 1
+        if team1 and metric1:
+            df_t1 = df_chart_data[df_chart_data["Team"] == team1].sort_values("Match_No")
+            fig.add_trace(go.Scatter(
+                x=df_t1["Match_No"], 
+                y=df_t1[metric1], 
+                mode='lines+markers', 
+                name=f"{team1} - {metric1}"
+            ))
+            
+        # Trace 2
+        if team2 != "None" and metric2 != "None":
+            df_t2 = df_chart_data[df_chart_data["Team"] == team2].sort_values("Match_No")
+            fig.add_trace(go.Scatter(
+                x=df_t2["Match_No"], 
+                y=df_t2[metric2], 
+                mode='lines+markers', 
+                name=f"{team2} - {metric2}"
+            ))
+            
+        fig.update_layout(
+            title="Rolling 8-Game Average", 
+            xaxis_title="Match Number", 
+            yaxis_title="Value",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+# ============================================================
+# 6. Main UI Tabs
 # ============================================================
 tab1, tab2, tab3, tab4 = st.tabs(["League Table", "Form Table (Last 8 Games)", "Combined League Table", "Combined Form Table (Last 8 Games)"])
 
@@ -244,6 +328,9 @@ with tab1:
             fig.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig, width='stretch')
+            
+        # --- Rolling Average Chart ---
+        render_rolling_chart(df_rolling_filtered, df_headline_filtered["Team"].unique(), "tab1")
 
     else:
         st.info("No data found for the selected filters.")
@@ -358,6 +445,9 @@ with tab2:
             fig_f.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig_f, width='stretch')
+            
+        # --- Rolling Average Chart ---
+        render_rolling_chart(df_rolling_filtered, df_form_filtered["Team"].unique(), "tab2")
 
     else:
         st.info("No form data found.")
@@ -476,6 +566,9 @@ with tab3:
             fig_c.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig_c, width='stretch')
+            
+        # --- Rolling Average Chart ---
+        render_rolling_chart(df_rolling_filtered, df_headline_combined["Team"].unique(), "tab3")
 
     else:
         st.info("No combined data found.")
@@ -594,122 +687,11 @@ with tab4:
             fig_fc.add_hline(y=y_median, line_width=1, line_dash="dash", line_color="black")
 
             st.plotly_chart(fig_fc, width='stretch')
+            
+        # --- Rolling Average Chart ---
+        render_rolling_chart(df_rolling_filtered, df_form_combined["Team"].unique(), "tab4")
 
     else:
         st.info("No combined form data found.")
 
-# ============================================================
-# 6. Rolling Average Chart
-# ============================================================
-st.markdown("---")
-st.subheader("📈 Team Form (8-Game Rolling Average)")
 
-# 1. Load Match Results Data (Silver Layer)
-# We fetch the whole table once to save on DB calls
-with st.spinner("Loading match results..."):
-    df_results = get_data("results", schema="processed")
-
-# Pre-processing (Ensure dates are datetime and sort)
-if not df_results.empty:
-    if "date" in df_results.columns:
-        df_results["date"] = pd.to_datetime(df_results["date"])
-    
-    # Capitalize columns for display
-    df_results.columns = [c.capitalize() for c in df_results.columns]
-
-    # Layout: Filters on Left (1 part), Graph on Right (3 parts)
-    col_filters, col_graph = st.columns([1, 3])
-
-    with col_filters:
-        st.markdown("### Filters")
-
-        # Dictionary mapping the UI Label (PG) to the underlying Raw Column in 'results'
-        # These raw columns must exist in your df_results (from the silver layer)
-        metric_map = {
-            "PPG": "Points",            # Points Per Game
-            "xGD_PPG": "Expected_result_points", # xPoints Per Game
-            "G_PG": "Goals",            # Goals Per Game
-            "GA_PG": "Goals_allowed",   # Goals Allowed Per Game
-            "GD_PG": "Goal_difference", # Goal Difference Per Game
-            "xG_PG": "Expected_goals",  # xG Per Game
-            "xGA_PG": "Expected_goals_allowed", # xGA Per Game
-            "xGD_PG": "Expected_goal_difference" # xGD Per Game
-        }
-
-        # --- Team Filters ---
-        if "Team" in df_results.columns:
-            team_options = sorted(df_results["Team"].unique())
-            team_1 = st.selectbox("Team 1", team_options, index=0, key="roll_team_1")
-            team_2 = st.selectbox("Team 2", ["None"] + team_options, index=0, key="roll_team_2")
-        else:
-            st.error("Team column not found.")
-            team_1, team_2 = None, None
-
-        # --- Metric Filters ---
-        pg_metrics = list(metric_map.keys())
-        # Default to xG_PG or first metric
-        default_idx = pg_metrics.index("xG_PG") if "xG_PG" in pg_metrics else 0
-        metric_1 = st.selectbox("Metric 1", pg_metrics, index=default_idx, key="roll_metric_1")
-        metric_2 = st.selectbox("Metric 2", ["None"] + pg_metrics, index=0, key="roll_metric_2")
-
-    with col_graph:
-        if team_1 and metric_1:
-            # Get the raw column names for the selected metrics
-            raw_metric_1 = metric_map.get(metric_1)
-            raw_metric_2 = metric_map.get(metric_2) if metric_2 != "None" else None
-
-            # Validate that raw columns exist in df_results
-            raw_metrics_to_calc = [m for m in [raw_metric_1, raw_metric_2] if m]
-            missing_cols = [col for col in raw_metrics_to_calc if col not in df_results.columns]
-            
-            if missing_cols:
-                st.error(f"Missing required columns in data: {', '.join(missing_cols)}")
-            else:
-                plot_data = pd.DataFrame()
-
-                for team_name in [team_1, team_2]:
-                    if team_name == "None": 
-                        continue
-                    
-                    # Filter for Team
-                    team_df = df_results[df_results["Team"] == team_name].copy()
-                    team_df = team_df.sort_values("Date")
-                    
-                    # --- Key Calculation Step ---
-                    # We use a rolling window of 8
-                    
-                    for raw_col in raw_metrics_to_calc:
-                        # 1. Calculate Rolling Sum of the stat (e.g., Total Goals in last 8 games)
-                        rolling_sum = team_df[raw_col].rolling(window=8, min_periods=1).sum()
-                        
-                        # 2. Calculate Rolling Count of matches (Matches Played in window)
-                        # usually 8, but allows for partial windows at start of season
-                        rolling_count = team_df[raw_col].rolling(window=8, min_periods=1).count()
-                        
-                        # 3. Calculate the PG metric
-                        # This matches the logic: Sum(Stat) / Count(Games)
-                        # Handle division by zero by replacing 0 count with NaN
-                        pg_metric_name = next((k for k, v in metric_map.items() if v == raw_col), None)
-                        if pg_metric_name is None:
-                            continue
-                            
-                        legend_name = f"{team_name} - {pg_metric_name}"
-                        
-                        team_df[legend_name] = rolling_sum / rolling_count.replace(0, pd.NA)
-                        
-                        # Merge for plotting
-                        temp_df = team_df[["Date", legend_name]].set_index("Date")
-                        plot_data = pd.merge(plot_data, temp_df, left_index=True, right_index=True, how='outer') if not plot_data.empty else temp_df
-
-                if not plot_data.empty:
-                    fig = px.line(plot_data, x=plot_data.index, y=plot_data.columns,
-                                title=f"Rolling 8-Game Average (Per Game)",
-                                labels={"value": "Per Game Average", "Date": "Match Date", "variable": "Legend"})
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("Select a team and metric to visualize trends.")
-        else:
-            st.info("Please select at least one team and one metric.")
-
-else:
-    st.error("Could not load results data.")
