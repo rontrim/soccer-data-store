@@ -9,6 +9,9 @@ variables:
   job_suffix:
     description: Suffix to append to job names to distinguish environments
     default: ""
+  schedule_pause_status:
+    description: Whether the job schedule is paused or unpaused
+    default: "UNPAUSED"
 
 include:
   - resources/*.yml
@@ -30,6 +33,7 @@ targets:
       user_name: rhe_29@hotmail.com
     variables:
       job_suffix: " (Staging)"
+      schedule_pause_status: "PAUSED"
 
   prod:
     mode: production
@@ -39,3 +43,4 @@ targets:
       user_name: rhe_29@hotmail.com 
     variables:
       job_suffix: ""
+      schedule_pause_status: "UNPAUSED"
