@@ -6,6 +6,7 @@ resources:
     soccer_bronze_pipeline:
       name: "Soccer Data - Bronze Layer"
       target: "soccer_data_bronze"
+      serverless: true
       libraries:
         - file:
             path: ../club-soccer-data/bronze-layer/player_match_bronze.sql
@@ -14,9 +15,6 @@ resources:
       
       configuration:
         soccer.datastore.extract: /mnt/soccerdatastore/extract
-      clusters:
-        - label: "default"
-          num_workers: 1
 
     # =========================================================
     # 2. Silver Layer Pipeline
@@ -24,6 +22,7 @@ resources:
     soccer_silver_pipeline:
       name: "Soccer Data - Silver Layer"
       target: "soccer_data_silver"
+      serverless: true
       libraries:
         # List all your Silver transformation scripts
         - file:
@@ -35,6 +34,7 @@ resources:
     soccer_gold_pipeline:
       name: "Soccer Data - Gold Layer"
       target: "soccer_data_gold"
+      serverless: true
       libraries:
         # List all your Gold aggregation scripts
         - file:
