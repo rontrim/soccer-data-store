@@ -27,7 +27,7 @@ targets:
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
     run_as:
-      user_name: rhetrim@gmail.com
+      user_name: rhe_29@hotmail.com
     variables:
       job_suffix: " (Staging)"
 
@@ -36,6 +36,6 @@ targets:
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
     run_as:
-      user_name: rhetrim@gmail.com
+      user_name: rhe_29@hotmail.com 
     variables:
       job_suffix: ""
