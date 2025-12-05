@@ -5,6 +5,11 @@
 bundle:
   name: soccer-data-store
 
+variables:
+  job_suffix:
+    description: Suffix to append to job names to distinguish environments
+    default: ""
+
 include:
   - resources/*.yml
 
@@ -14,11 +19,23 @@ targets:
     default: true
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
+    variables:
+      job_suffix: " (Dev)"
+
+  staging:
+    mode: production
+    workspace:
+      host: https://adb-3647422366695414.14.azuredatabricks.net
+    run_as:
+      user_name: rhetrim@gmail.com
+    variables:
+      job_suffix: " (Staging)"
 
   prod:
     mode: production
     workspace:
       host: https://adb-3647422366695414.14.azuredatabricks.net
     run_as:
-      # This runs the job as the user deploying it, or you can specify a service principal
       user_name: rhetrim@gmail.com
+    variables:
+      job_suffix: ""
