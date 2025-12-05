@@ -115,7 +115,7 @@ def render_rolling_chart(df_rolling, available_teams, key_suffix):
         return
 
     # Get Metrics (Numeric columns excluding metadata)
-    exclude_cols = ["Team", "Season", "League", "Date", "Match_No"]
+    exclude_cols = ["Team", "Season", "League", "Date", "Match No"]
     metrics = [c for c in df_chart_data.columns if c not in exclude_cols]
     
     # Layout: Filters (Left) | Graph (Right)
@@ -144,9 +144,9 @@ def render_rolling_chart(df_rolling, available_teams, key_suffix):
         
         # Trace 1
         if team1 and metric1:
-            df_t1 = df_chart_data[df_chart_data["Team"] == team1].sort_values("Match_No")
+            df_t1 = df_chart_data[df_chart_data["Team"] == team1].sort_values("Match No")
             fig.add_trace(go.Scatter(
-                x=df_t1["Match_No"], 
+                x=df_t1["Match No"], 
                 y=df_t1[metric1], 
                 mode='lines+markers', 
                 name=f"{team1} - {metric1}"
@@ -154,9 +154,9 @@ def render_rolling_chart(df_rolling, available_teams, key_suffix):
             
         # Trace 2
         if team2 != "None" and metric2 != "None":
-            df_t2 = df_chart_data[df_chart_data["Team"] == team2].sort_values("Match_No")
+            df_t2 = df_chart_data[df_chart_data["Team"] == team2].sort_values("Match No")
             fig.add_trace(go.Scatter(
-                x=df_t2["Match_No"], 
+                x=df_t2["Match No"], 
                 y=df_t2[metric2], 
                 mode='lines+markers', 
                 name=f"{team2} - {metric2}"

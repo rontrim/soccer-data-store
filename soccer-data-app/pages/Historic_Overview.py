@@ -278,7 +278,7 @@ with tab1:
             seasons = sorted(df_rolling_filtered["Season"].unique().tolist(), reverse=True)
             
             # Metrics
-            exclude_cols = ["Team", "Season", "League", "Date", "Match_No"]
+            exclude_cols = ["Team", "Season", "League", "Date", "Match No"]
             metrics = [c for c in df_rolling_filtered.columns if c not in exclude_cols]
             
             # Layout: Filters (Left) | Graph (Right)
@@ -310,11 +310,11 @@ with tab1:
                     df_1 = df_rolling_filtered[
                         (df_rolling_filtered["Team"] == team1) & 
                         (df_rolling_filtered["Season"] == season1)
-                    ].sort_values("Match_No")
+                    ].sort_values("Match No")
                     
                     if not df_1.empty:
                         fig.add_trace(go.Scatter(
-                            x=df_1["Match_No"], 
+                            x=df_1["Match No"], 
                             y=df_1[metric1], 
                             mode='lines+markers', 
                             name=f"{team1} {season1} - {metric1}"
@@ -327,11 +327,11 @@ with tab1:
                     df_2 = df_rolling_filtered[
                         (df_rolling_filtered["Team"] == team2) & 
                         (df_rolling_filtered["Season"] == season2)
-                    ].sort_values("Match_No")
+                    ].sort_values("Match No")
                     
                     if not df_2.empty:
                         fig.add_trace(go.Scatter(
-                            x=df_2["Match_No"], 
+                            x=df_2["Match No"], 
                             y=df_2[metric2], 
                             mode='lines+markers', 
                             name=f"{team2} {season2} - {metric2}"
