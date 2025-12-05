@@ -4,7 +4,8 @@ resources:
     # 1. Bronze Layer Pipeline
     # =========================================================
     soccer_bronze_pipeline:
-      name: "Soccer Data - Bronze Layer"
+      name: "Soccer Data - Bronze Layer (${bundle.target})"
+      catalog: "soccer_data"
       target: "soccer_data_bronze"
       serverless: true
       libraries:
@@ -20,7 +21,8 @@ resources:
     # 2. Silver Layer Pipeline
     # =========================================================
     soccer_silver_pipeline:
-      name: "Soccer Data - Silver Layer"
+      name: "Soccer Data - Silver Layer (${bundle.target})"
+      catalog: "soccer_data"
       target: "soccer_data_silver"
       serverless: true
       libraries:
@@ -32,7 +34,8 @@ resources:
     # 3. Gold Layer Pipeline
     # =========================================================
     soccer_gold_pipeline:
-      name: "Soccer Data - Gold Layer"
+      name: "Soccer Data - Gold Layer (${bundle.target})"
+      catalog: "soccer_data"
       target: "soccer_data_gold"
       serverless: true
       libraries:
