@@ -6,7 +6,7 @@ resources:
     soccer_bronze_pipeline:
       name: "Soccer Data - Bronze Layer (${bundle.target})"
       catalog: "soccer_data"
-      target: "soccer_data_bronze"
+      target: "extract"
       serverless: true
       libraries:
         - file:
@@ -15,7 +15,7 @@ resources:
             path: ../club-soccer-data/bronze-layer/team_match_level.sql
       
       configuration:
-        soccer.datastore.extract: /mnt/soccerdatastore/extract
+        soccer.datastore.extract: abfss://extract@soccerdatastore.dfs.core.windows.net/
 
     # =========================================================
     # 2. Silver Layer Pipeline
@@ -23,7 +23,7 @@ resources:
     soccer_silver_pipeline:
       name: "Soccer Data - Silver Layer (${bundle.target})"
       catalog: "soccer_data"
-      target: "soccer_data_silver"
+      target: "processed"
       serverless: true
       libraries:
         # List all your Silver transformation scripts
@@ -36,7 +36,7 @@ resources:
     soccer_gold_pipeline:
       name: "Soccer Data - Gold Layer (${bundle.target})"
       catalog: "soccer_data"
-      target: "soccer_data_gold"
+      target: "analyze"
       serverless: true
       libraries:
         # List all your Gold aggregation scripts
