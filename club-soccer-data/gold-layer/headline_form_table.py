@@ -1,6 +1,9 @@
 import dlt
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
 
 # Configuration
 SOURCE_TABLE = "soccer_data.processed.results"
@@ -87,7 +90,7 @@ def apply_transformations_and_ratios(df):
     "(MP = W + D + L) AND (MP = xGD_W + xGD_D + xGD_L)"
 )
 def headline_stats():
-    df = dlt.read(SOURCE_TABLE)
+    df = spark.read.table(SOURCE_TABLE)
     aggregated_df = df.groupBy("team_id", "team", "team_code_understat", "season", "league").agg(*get_common_aggregations())
     return apply_transformations_and_ratios(aggregated_df)
 
@@ -107,7 +110,7 @@ def headline_stats():
     "MP <= 8 AND (MP = W + D + L) AND (MP = xGD_W + xGD_D + xGD_L)"
 )
 def form_stats():
-    df = dlt.read(SOURCE_TABLE)
+    df = spark.read.table(SOURCE_TABLE)
     
     max_season_df = df.select(F.max("season").alias("max_season"))
     current_season_df = df.join(max_season_df, F.col("season") == F.col("max_season"))

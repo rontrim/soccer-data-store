@@ -1,6 +1,9 @@
 import dlt
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
 
 # Configuration
 SOURCE_TABLE = "soccer_data.processed.results"
@@ -11,7 +14,7 @@ SOURCE_TABLE = "soccer_data.processed.results"
     table_properties={"quality": "gold"}
 )
 def rolling_stats():
-    df = dlt.read(SOURCE_TABLE)
+    df = spark.read.table(SOURCE_TABLE)
 
     # Define the window: Partition by Team-Season (team_id), Order by Date, Last 8 rows
     # team_id is unique per team-season (e.g. Arsenal-2023), ensuring we don't cross seasons.

@@ -1,7 +1,9 @@
 import dlt
 import pyspark.sql.functions as F
 from pyspark.sql.utils import AnalysisException
-from pyspark.sql import Window
+from pyspark.sql import Window, SparkSession
+
+spark = SparkSession.builder.getOrCreate()
 
 # ============================================================
 # Configuration
@@ -9,7 +11,7 @@ from pyspark.sql import Window
 BRONZE_STANDARD = "soccer_data.extract.team_match_results"
 BRONZE_ADV = "soccer_data.extract.team_match_results_advanced"
 MAPPING_TABLE = "soccer_data.processed.team_name_mappings"
-FINAL_TABLE = "soccer_data.processed.results"
+FINAL_TABLE = "results"
 # TEST_SEASON = "1819" # Keep this commented out for production
 
 # ============================================================
@@ -38,7 +40,7 @@ def sanitize_columns(df):
     comment="Cleaned streaming view of standard match results (sanitized names + ids)."
 )
 def bronze_standard_cleaned():
-    df = dlt.read_stream(BRONZE_STANDARD)
+    df = spark.readStream.table(BRONZE_STANDARD)
     df = sanitize_columns(df)
 
     # Recover missing data from _rescued_data if available
@@ -109,7 +111,7 @@ dlt.apply_changes(
     comment="Advanced bronze unified stream: expands home/away into one side-per-row with consistent columns."
 )
 def adv_bronze_with_ids_unified():
-    adv = sanitize_columns(dlt.read_stream(BRONZE_ADV))
+    adv = sanitize_columns(spark.readStream.table(BRONZE_ADV))
 
     # # limit to test season
     # adv = adv.filter(F.col("season") == TEST_SEASON)
@@ -210,7 +212,7 @@ def results_advanced():
         #    .filter(F.col("season") == TEST_SEASON)
     )
     median = dlt.read("median_ppda_stats")
-    mapping = dlt.read(MAPPING_TABLE)
+    mapping = spark.read.table(MAPPING_TABLE)
 
     adv = (
         adv.join(median, "season", "left")
