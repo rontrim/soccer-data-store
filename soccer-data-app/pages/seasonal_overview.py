@@ -168,7 +168,7 @@ def render_rolling_chart(df_rolling, available_teams, key_suffix):
             yaxis_title="Value",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        st.plotly_chart(fig, use_container_width=True, key=f"chart_{key_suffix}")
+        st.plotly_chart(fig, key=f"chart_{key_suffix}")
 
 # ============================================================
 # 6. Main UI Tabs

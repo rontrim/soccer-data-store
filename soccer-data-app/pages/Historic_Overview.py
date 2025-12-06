@@ -345,7 +345,7 @@ with tab1:
                     yaxis_title="Value",
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig)
             
         else:
             st.info("No rolling data available.")
