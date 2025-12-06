@@ -47,6 +47,9 @@ This project is a **Databricks Asset Bundle (DAB)** implementing a **Medallion A
 - **Data Access**: Uses `databricks.sql.connect` to query Gold tables (`soccer_data.analyze`).
 - **Caching**: Use `@st.cache_data(ttl=3600)` for expensive SQL queries.
 - **UI Components**: Use `st.column_config` for formatting dataframes (e.g., Progress bars for possession).
+- **Deprecations**: Do NOT use `use_container_width` (deprecated). Use `width` instead:
+  - For `use_container_width=True`, use `width='stretch'`.
+  - For `use_container_width=False`, use `width='content'`.
 
 ## ⚠️ Critical Integration Points
 - **Job Orchestration**: The job `Club_Soccer_Data_Processing` relies on the output of `recent_matches_check.py` (row count) to decide whether to trigger the DLT pipeline.
