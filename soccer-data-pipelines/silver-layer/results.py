@@ -361,6 +361,7 @@ def final_results():
         F.to_date(F.col("date")).alias("date"),
         F.col("team"),
         F.coalesce(F.col("adv_team_understat"), F.col("team")).alias("team_understat"),
+        # Fallback: Use first 3 uppercase chars of team name (e.g., "Arsenal" -> "ARS") to match standard team code format
         F.coalesce(F.col("adv_team_code_understat"), F.upper(F.substring(F.col("team"), 1, 3))).alias("team_code_understat"),
         F.col("opponent"),
         F.coalesce(F.col("adv_opponent_understat"), F.col("opponent")).alias("opponent_understat"),
