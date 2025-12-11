@@ -269,6 +269,13 @@ def results_advanced():
 @dlt.expect_or_fail("date_not_null", "date IS NOT NULL")
 @dlt.expect_or_fail("team_not_null", "team IS NOT NULL")
 def final_results():
+    """
+    Creates the final silver-layer results table by joining standard and advanced match data.
+    
+    Uses COALESCE fallbacks for advanced-derived columns (team_understat, team_code_understat, 
+    opponent_understat) to handle cases where advanced data lags behind standard results.
+    Fallback values prevent NULL grouping in downstream gold-layer aggregations.
+    """
     # Reading 'results_standard' as a BATCH table
     std = (
         dlt.read("results_standard")
@@ -361,7 +368,7 @@ def final_results():
         F.to_date(F.col("date")).alias("date"),
         F.col("team"),
         F.coalesce(F.col("adv_team_understat"), F.col("team")).alias("team_understat"),
-        # Fallback: Use first 3 uppercase chars of team name (e.g., "Arsenal" -> "ARS") to match standard team code format
+        # Fallback to first 3 uppercase chars when advanced data is missing
         F.coalesce(F.col("adv_team_code_understat"), F.upper(F.substring(F.col("team"), 1, 3))).alias("team_code_understat"),
         F.col("opponent"),
         F.coalesce(F.col("adv_opponent_understat"), F.col("opponent")).alias("opponent_understat"),
