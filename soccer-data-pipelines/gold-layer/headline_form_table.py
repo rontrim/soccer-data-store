@@ -13,9 +13,16 @@ SOURCE_TABLE = "soccer_data.processed.results"
 # ============================================================
 
 def get_common_aggregations():
-    """Defines the core aggregation logic shared by both tables."""
+    """Defines the core aggregation logic shared by both tables.
+    
+    Note: team_code_understat is aggregated here with first() rather than being in groupBy
+    to prevent split groups when advanced data lags behind standard data (causing different
+    fallback values for team_code_understat within the same team-season).
+    """
     # Names use underscores to avoid Delta invalid character errors
     return [
+        # Team abbreviation - use first() to avoid split groupings when advanced data lags
+        F.first("team_code_understat", ignorenulls=True).alias("team_code_understat"),
         F.sum("points").cast("integer").alias("Points"),
         F.count(F.when(F.col("result") == "W", 1)).cast("integer").alias("W"),
         F.count(F.when(F.col("result") == "D", 1)).cast("integer").alias("D"),
@@ -91,7 +98,9 @@ def apply_transformations_and_ratios(df):
 )
 def headline_stats():
     df = spark.read.table(SOURCE_TABLE)
-    aggregated_df = df.groupBy("team_id", "team", "team_code_understat", "season", "league").agg(*get_common_aggregations())
+    # team_code_understat removed from groupBy - now aggregated via first() in get_common_aggregations()
+    # This prevents split groups when advanced data lags behind standard data
+    aggregated_df = df.groupBy("team_id", "team", "season", "league").agg(*get_common_aggregations())
     return apply_transformations_and_ratios(aggregated_df)
 
 # ============================================================
@@ -123,5 +132,7 @@ def form_stats():
         .filter(F.col("match_rank") <= 8)
     )
     
-    aggregated_df = last_8_df.groupBy("team_id", "team", "team_code_understat", "season", "league").agg(*get_common_aggregations())
+    # team_code_understat removed from groupBy - now aggregated via first() in get_common_aggregations()
+    # This prevents split groups when advanced data lags behind standard data
+    aggregated_df = last_8_df.groupBy("team_id", "team", "season", "league").agg(*get_common_aggregations())
     return apply_transformations_and_ratios(aggregated_df)
