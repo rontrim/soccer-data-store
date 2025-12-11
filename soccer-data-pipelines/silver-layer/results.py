@@ -274,6 +274,12 @@ def final_results():
     
     Uses COALESCE fallbacks for advanced-derived columns (team_understat, team_code_understat, 
     opponent_understat) to handle cases where advanced data lags behind standard results.
+    
+    For team_code_understat, uses a tiered fallback approach:
+    1. Advanced data team code (if available)
+    2. Hardcoded mapping for common teams to avoid collisions (e.g., Manchester United -> MUN vs Manchester City -> MCI)
+    3. First 3 uppercase characters of team name (last resort)
+    
     Fallback values prevent NULL grouping in downstream gold-layer aggregations.
     """
     # Reading 'results_standard' as a BATCH table
@@ -356,6 +362,20 @@ def final_results():
 
     final_dedup = final.dropDuplicates(["result_team_id"])
 
+    # Team code mapping for common cases to avoid collisions (e.g., Manchester United vs Manchester City)
+    team_code_map = F.create_map([
+        F.lit("Manchester Utd"), F.lit("MUN"),
+        F.lit("Manchester City"), F.lit("MCI"),
+        F.lit("Nott'ham Forest"), F.lit("NFO"),
+        F.lit("Nottm Forest"), F.lit("NFO"),
+        F.lit("Brighton"), F.lit("BHA"),
+        F.lit("Newcastle Utd"), F.lit("NEW"),
+        F.lit("West Ham"), F.lit("WHU"),
+        F.lit("Wolves"), F.lit("WOL"),
+        F.lit("Tottenham"), F.lit("TOT"),
+        F.lit("Leicester City"), F.lit("LEI"),
+    ])
+
     return final_dedup.select(
         F.col("result_team_id"),
         F.col("game_team_id").alias("result_team_id_understat"),
@@ -368,8 +388,12 @@ def final_results():
         F.to_date(F.col("date")).alias("date"),
         F.col("team"),
         F.coalesce(F.col("adv_team_understat"), F.col("team")).alias("team_understat"),
-        # Fallback to first 3 uppercase chars when advanced data is missing
-        F.coalesce(F.col("adv_team_code_understat"), F.upper(F.substring(F.col("team"), 1, 3))).alias("team_code_understat"),
+        # Fallback: use mapping for common teams, then first 3 uppercase chars as last resort
+        F.coalesce(
+            F.col("adv_team_code_understat"), 
+            team_code_map[F.col("team")],
+            F.upper(F.substring(F.col("team"), 1, 3))
+        ).alias("team_code_understat"),
         F.col("opponent"),
         F.coalesce(F.col("adv_opponent_understat"), F.col("opponent")).alias("opponent_understat"),
         F.col("formation"),
