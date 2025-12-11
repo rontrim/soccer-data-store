@@ -22,7 +22,7 @@ resources:
           # job_cluster_key: club_soccer_ingestion  <-- Removed to enable Serverless Compute
           spark_python_task:
             # UPDATED: Relative path to the file in your repo
-            python_file: ../club-soccer-data/bronze-layer/recent_matches_check.py
+            python_file: ../soccer-data-pipelines/bronze-layer/recent_matches_check.py
             # Note: Since Serverless doesn't support spark_conf, if your script needs the path,
             # you should pass it as a parameter here instead:
             # parameters:
