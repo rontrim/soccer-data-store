@@ -56,7 +56,7 @@ def get_headline_stats(table_name="headline_stats", schema="analyze", force_refr
     
     # Check if data exists in session state and force_refresh is not requested
     if not force_refresh and session_key in st.session_state:
-        return st.session_state[session_key]
+        return st.session_state[session_key].copy()
     
     # Fetch data from Databricks using the existing cached function
     df = get_data(table_name, schema)
@@ -64,4 +64,4 @@ def get_headline_stats(table_name="headline_stats", schema="analyze", force_refr
     # Store in session state for future use
     st.session_state[session_key] = df
     
-    return df
+    return df.copy()
