@@ -37,3 +37,79 @@ def get_data(table_name, schema="analyze"):
     except Exception as e:
         st.error(f"❌ Connection Error: {e}")
         return pd.DataFrame()
+
+
+def get_cached_data(table_name, schema="analyze", force_refresh=False):
+    """
+    Fetches data from session state if available, otherwise from Databricks.
+    This prevents redundant warehouse queries when navigating between pages.
+    
+    Args:
+        table_name: Name of the table to fetch
+        schema: Database schema (default: "analyze")
+        force_refresh: If True, bypasses session state and fetches fresh data
+        
+    Returns:
+        pd.DataFrame: The requested data
+    """
+    session_key = f"{schema}_{table_name}"
+    
+    # Check if data exists in session state and force_refresh is not requested
+    if not force_refresh and session_key in st.session_state:
+        return st.session_state[session_key].copy()
+    
+    # Fetch data from Databricks using the existing cached function
+    df = get_data(table_name, schema)
+    
+    # Store in session state for future use
+    st.session_state[session_key] = df
+    
+    return df.copy()
+
+
+def get_headline_stats(table_name="headline_stats", schema="analyze", force_refresh=False):
+    """
+    Fetches headline_stats from session state if available, otherwise from Databricks.
+    This prevents redundant warehouse queries when navigating between pages.
+    
+    Args:
+        table_name: Name of the table to fetch (default: "headline_stats")
+        schema: Database schema (default: "analyze")
+        force_refresh: If True, bypasses session state and fetches fresh data
+        
+    Returns:
+        pd.DataFrame: The headline stats data
+    """
+    return get_cached_data(table_name, schema, force_refresh)
+
+
+def get_form_stats(table_name="form_stats", schema="analyze", force_refresh=False):
+    """
+    Fetches form_stats from session state if available, otherwise from Databricks.
+    This prevents redundant warehouse queries when navigating between pages.
+    
+    Args:
+        table_name: Name of the table to fetch (default: "form_stats")
+        schema: Database schema (default: "analyze")
+        force_refresh: If True, bypasses session state and fetches fresh data
+        
+    Returns:
+        pd.DataFrame: The form stats data
+    """
+    return get_cached_data(table_name, schema, force_refresh)
+
+
+def get_rolling_stats(table_name="rolling_stats", schema="analyze", force_refresh=False):
+    """
+    Fetches rolling_stats from session state if available, otherwise from Databricks.
+    This prevents redundant warehouse queries when navigating between pages.
+    
+    Args:
+        table_name: Name of the table to fetch (default: "rolling_stats")
+        schema: Database schema (default: "analyze")
+        force_refresh: If True, bypasses session state and fetches fresh data
+        
+    Returns:
+        pd.DataFrame: The rolling stats data
+    """
+    return get_cached_data(table_name, schema, force_refresh)
