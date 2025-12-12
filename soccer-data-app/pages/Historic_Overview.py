@@ -7,7 +7,7 @@ import sys
 
 # Add parent directory to path to allow importing utils
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import get_data, get_headline_stats
+from utils import get_headline_stats, get_rolling_stats
 
 # ============================================================
 # 1. App Configuration
@@ -31,7 +31,7 @@ TABLE_ROLLING = "rolling_stats"
 # ============================================================
 with st.spinner("Loading stats..."):
     df_headline = get_headline_stats(TABLE_HEADLINE)
-    df_rolling = get_data(TABLE_ROLLING)
+    df_rolling = get_rolling_stats(TABLE_ROLLING)
 
 # --- Transformation: Replace Underscores with Spaces ---
 if not df_headline.empty:
