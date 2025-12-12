@@ -2,7 +2,7 @@ import streamlit as st
 from databricks import sql
 import pandas as pd
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=43200)
 def get_data(table_name, schema="analyze"):
     """
     Fetches data from Databricks SQL Warehouse.
